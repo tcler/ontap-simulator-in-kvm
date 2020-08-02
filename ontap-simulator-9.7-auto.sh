@@ -5,9 +5,11 @@
 vmname=ontap-single
 password=fsqe2020
 cluster_name=fsqe-sn-01
+managementif_port=e0c
 managementif_addr=10.66.12.229
 managementif_mask=255.255.254.0
 managementif_gateway=10.66.13.254
+cluster_managementif_port=e0a
 cluster_managementif_addr=192.168.100.11
 cluster_managementif_mask=255.255.255.0
 cluster_managementif_gateway=192.168.100.1
@@ -77,6 +79,7 @@ vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: node management interface port prompt ..."\033[0m"
 while sleep 2; do vnc_screen_text $vncaddr | ocrgrep "Enter the node management interface port" && break; done
+vncdo -s ${vncaddr} type "${managementif_port}"
 vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: node management interface ip address prompt ..."\033[0m"
@@ -129,6 +132,7 @@ vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: cluster management interface port prompt ..."\033[0m"
 while sleep 2; do vnc_screen_text $vncaddr | ocrgrep "Enter the cluster management interface port" && break; done
+vncdo -s ${vncaddr} type "${cluster_managementif_port}"
 vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: cluster management interface ip address prompt ..."\033[0m"
