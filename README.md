@@ -36,9 +36,11 @@ for i in {1..4}; do qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-di
 vmname=ontap-single
 password=fsqe2020
 cluster_name=fsqe-sn-01
+managementif_port=e0c
 managementif_addr=10.66.12.229
 managementif_mask=255.255.254.0
 managementif_gateway=10.66.13.254
+cluster_managementif_port=e0a
 cluster_managementif_addr=192.168.100.11
 cluster_managementif_mask=255.255.255.0
 cluster_managementif_gateway=192.168.100.1
