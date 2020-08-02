@@ -1,10 +1,10 @@
 # ontap-simulator-in-kvm
 show how to install and configure ONTAP simulator in KVM automatically
 
-# verified host OS
+### verified host OS
 Fedora-32, Fedora-33
 
-# dependent packages install
+### dependent packages install
 ```
 #1. kiss-vm
 git clone https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns; sudo vm --prepare
@@ -19,7 +19,7 @@ sudo yum install -y gocr
 #*4. if you are non-root user, open new terminal and continue
 ```
 
-# download ONTAP simulator image and license file, and convert image file to qcow2
+### download ONTAP simulator image and license file, and convert image file to qcow2
 ```
 # download url: https://mysupport.netapp.com/site/tools/tool-eula/simulate-ontap
 # note: need log in to the NetApp Support Site athttp://mysupport-beta.netapp.com/ before download
@@ -27,7 +27,7 @@ tar vxf vsim-netapp-DOT9.7-cm_nodar.ova
 for i in {1..4}; do qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2; done
 ```
 
-# change/customize your own configuration in automation script. e.g:
+### change/customize your own configuration in automation script. e.g:
 ```
 #!/bin/bash
 #configure ontap simulator 9.7 as single cluster
@@ -47,7 +47,7 @@ dns_addr=192.168.100.1
 controller_located=raycom
 ```
 
-# run the automation script. e.g: ontap-simulator-9.7-auto.sh
+### run the automation script. e.g: ontap-simulator-9.7-auto.sh
 ```
 bash ontap-simulator-9.7-auto.sh
 ```
