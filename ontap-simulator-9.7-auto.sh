@@ -146,7 +146,7 @@ while sleep 2; do vnc_screen_text $vncaddr | ocrgrep "Enter the cluster manageme
 vncdo -s ${vncaddr} type "$cluster_managementif_gateway"
 vncdo -s ${vncaddr} key enter
 
-:; echo -e "\n\033[1;36m=>" waiting: DNS domain namesask prompt ..."\033[0m"
+:; echo -e "\n\033[1;36m=>" waiting: DNS domain names ask prompt ..."\033[0m"
 while sleep 2; do vnc_screen_text $vncaddr | ocrgrep "Enter the DNS domain names" && break; done
 vncdo -s ${vncaddr} type "$dns_domain"
 vncdo -s ${vncaddr} key enter
