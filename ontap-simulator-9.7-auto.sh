@@ -29,9 +29,11 @@ ocrgrep() {
 	grep -i "${pattern}"
 }
 
+netname=ontap-isolate
+vm netcreate netname=$netname brname=br-ontap subnet=100
 vm -n $vmname ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
-	--net=ontap-isolate,e1000  --net=ontap-isolate,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
+	--net=$netname,e1000  --net=$netname,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
 	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2
 
 read vncaddr <<<"$(vm vnc $vmname)"
