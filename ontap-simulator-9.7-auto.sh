@@ -1,14 +1,32 @@
 #!/bin/bash
 #configure ontap simulator 9.7 as single cluster
 
+getIp4() {
+	local ret
+	local nic=$1
+	local ipaddr=`ip addr show $nic`;
+	ret=$(echo "$ipaddr" |
+		awk '/inet .* dynamic/{match($0,"inet ([0-9.]+/[0-9]+)",M); print M[1]}');
+
+	echo "$ret"
+	[ -z "$ret" ] && return 1 || return 0
+}
+getDefaultNic() { ip route | awk '/default/{match($0,"dev ([^ ]+)",M); print M[1]; exit}'; }
+getDefaultIp4() {
+	local nic=$(getDefaultNic)
+	[ -z "$nic" ] && return 1
+	getIp4 "$nic"
+}
+getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
+
 ##please change/cusotmize bellow default configration at first
 vmname=ontap-single
 password=fsqe2020
 cluster_name=fsqe-sn-01
 managementif_port=e0c
-managementif_addr=10.66.12.229
-managementif_mask=255.255.254.0
-managementif_gateway=10.66.13.254
+managementif_addr=
+managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
+managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0a
 cluster_managementif_addr=192.168.100.11
 cluster_managementif_mask=255.255.255.0
@@ -51,6 +69,8 @@ vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: login prompt ..."\033[0m"
 while sleep 5; do vnc_screen_text $vncaddr | ocrgrep ^login: && break; done
+[[ -z "$managementif_addr" ]] &&
+	managementif_addr=$(vnc_screen_text $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 vncdo -s ${vncaddr} type "admin"
 vncdo -s ${vncaddr} key enter
 sleep 2
