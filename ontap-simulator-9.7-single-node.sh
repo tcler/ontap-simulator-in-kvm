@@ -28,11 +28,11 @@ managementif_addr=
 managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0a
-cluster_managementif_addr=192.168.100.11
+cluster_managementif_addr=192.168.10.11
 cluster_managementif_mask=255.255.255.0
-cluster_managementif_gateway=192.168.100.1
-dns_domain=192.168.100.1
-dns_addr=192.168.100.1
+cluster_managementif_gateway=192.168.10.1
+dns_domain=192.168.10.1
+dns_addr=192.168.10.1
 controller_located=raycom
 
 vnc_screen_text() {
@@ -50,7 +50,7 @@ ocrgrep() {
 }
 
 netname=ontap-isolate
-vm netcreate netname=$netname brname=br-ontap subnet=100
+vm netcreate netname=$netname brname=br-ontap subnet=10
 vm -n $vmname ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netname,e1000  --net=$netname,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
