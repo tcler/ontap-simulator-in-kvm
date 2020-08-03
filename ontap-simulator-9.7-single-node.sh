@@ -49,7 +49,7 @@ ocrgrep() {
 	grep -i "${pattern}"
 }
 
-netname=ontap-isolate
+netname=ontap-single
 vm netcreate netname=$netname brname=br-ontap subnet=10
 vm -n $vmname ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
