@@ -51,7 +51,7 @@ ocrgrep() {
 
 netname=ontap-single
 vm netcreate netname=$netname brname=br-ontap subnet=10
-vm netstart $netname
+vm net | grep -w $netname >/dev/null || vm netstart $netname
 vm -n $vmname ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netname,e1000  --net=$netname,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
