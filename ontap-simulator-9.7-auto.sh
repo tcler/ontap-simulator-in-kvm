@@ -45,7 +45,7 @@ vncaddr=${vncaddr/:/::}
 	exit 1
 }
 
-:; echo -e "\n\033[1;36m=>" waiting: Hit .Enter. to boot immediately prompt ..."\033[0m"
+:; echo -e "\n\033[1;36m=>" waiting: Hit [Enter] to boot immediately prompt ..."\033[0m"
 while sleep 0.5; do vnc_screen_text $vncaddr | ocrgrep "Hit .Enter. to boot immediately" && break; done
 vncdo -s ${vncaddr} key enter
 
@@ -62,7 +62,7 @@ while sleep 5; do vnc_screen_text $vncaddr | ocrgrep "Are you sure you want to r
 vncdo -s ${vncaddr} type "y"
 vncdo -s ${vncaddr} key enter
 
-:; echo -e "\n\033[1;36m=>" waiting: Hit .Enter. to boot immediately prompt ..."\033[0m"
+:; echo -e "\n\033[1;36m=>" waiting: Hit [Enter] to boot immediately prompt ..."\033[0m"
 while sleep 5; do vnc_screen_text $vncaddr | ocrgrep "Hit .Enter. to boot immediately" && break; done
 vncdo -s ${vncaddr} key enter
 
@@ -174,4 +174,4 @@ sleep 2
 vnc_screen_text $vncaddr | GREP_COLORS='ms=01;36' grep --color .
 :; echo -e "\n\033[1;36m------------------------------------------------------\033[0m"
 
-:; echo -e "\n\033[1;36m=>" "now ssh(admin@$cluster_managementif_addr) is available, please complete other configurations in ssh session ...""\033[0m"
+:; echo -e "\n\033[1;36m=>" "now ssh(admin@$managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...""\033[0m"
