@@ -70,6 +70,25 @@ vncdo -s ${vncaddr} key enter
 :; echo -e "\n\033[1;36m=>" waiting: Boot Menu ask prompt ..."\033[0m"
 while sleep 5; do vnc_screen_text $vncaddr | ocrgrep "Press Ctrl-C for Boot Menu." && break; done
 vncdo -s ${vncaddr} key ctrl-c
+
+:; echo -e "\n\033[1;36m=>" waiting: Boot Menu list ..."\033[0m"
+while sleep 5; do vnc_screen_text $vncaddr | ocrgrep "Selection (1-9)?" && break; done
+vncdo -s ${vncaddr} type "4"
+vncdo -s ${vncaddr} key ctrl-c
+
+:; echo -e "\n\033[1;36m=>" waiting: Zero disks, reset config and install a new file system? prompt ..."\033[0m"
+while sleep 5; do vnc_screen_text $vncaddr | ocrgrep "Zero disks, reset config and install a new file system?" && break; done
+vncdo -s ${vncaddr} type "yes"
+vncdo -s ${vncaddr} key ctrl-c
+
+:; echo -e "\n\033[1;36m=>" waiting: This will erase all the data on the disks, are you sure? prompt ..."\033[0m"
+while sleep 5; do vnc_screen_text $vncaddr | ocrgrep "This will erase all the data on the disks, are you sure?" && break; done
+vncdo -s ${vncaddr} type "yes"
+vncdo -s ${vncaddr} key ctrl-c
+
+:; echo -e "\n\033[1;36m=>" waiting: Hit [Enter] to boot immediately prompt ..."\033[0m"
+while sleep 5; do vnc_screen_text $vncaddr | ocrgrep "Hit .Enter. to boot immediately" && break; done
+vncdo -s ${vncaddr} key enter
 COMM
 
 :; echo -e "\n\033[1;36m=>" waiting: '"Type yes to confirm and continue {yes}:" ...'"\033[0m"
