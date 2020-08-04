@@ -23,10 +23,10 @@ getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
 vmname=ontap-single
 password=fsqe2020
 cluster_name=fsqe-sn-01
-managementif_port=e0c
-managementif_addr=
-managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
-managementif_gateway=$(getDefaultGateway)
+node_managementif_port=e0c
+node_managementif_addr=
+node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
+node_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0a
 cluster_managementif_addr=192.168.10.11
 cluster_managementif_mask=255.255.255.0
@@ -70,8 +70,8 @@ vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: login prompt ..."\033[0m"
 while sleep 5; do vnc_screen_text $vncaddr | ocrgrep ^login: && break; done
-[[ -z "$managementif_addr" ]] &&
-	managementif_addr=$(vnc_screen_text $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
+[[ -z "$node_managementif_addr" ]] &&
+	node_managementif_addr=$(vnc_screen_text $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 vncdo -s ${vncaddr} type "admin"
 vncdo -s ${vncaddr} key enter
 sleep 2
@@ -119,22 +119,22 @@ vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: node management interface port prompt ..."\033[0m"
 while sleep 2; do vnc_screen_text $vncaddr | ocrgrep "Enter the node management interface port" && break; done
-vncdo -s ${vncaddr} type "${managementif_port}"
+vncdo -s ${vncaddr} type "${node_managementif_port}"
 vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: node management interface ip address prompt ..."\033[0m"
 while sleep 2; do vnc_screen_text $vncaddr | ocrgrep "Enter the node management interface .. address" && break; done
-vncdo -s ${vncaddr} type "$managementif_addr"
+vncdo -s ${vncaddr} type "$node_managementif_addr"
 vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: node management interface ip netmask prompt ..."\033[0m"
 while sleep 2; do vnc_screen_text $vncaddr | ocrgrep "Enter the node management interface netmask" && break; done
-vncdo -s ${vncaddr} type "$managementif_mask"
+vncdo -s ${vncaddr} type "$node_managementif_mask"
 vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: node management interface gateway prompt ..."\033[0m"
 while sleep 2; do vnc_screen_text $vncaddr | ocrgrep "Enter the node management interface default gateway" && break; done
-vncdo -s ${vncaddr} type "$managementif_gateway"
+vncdo -s ${vncaddr} type "$node_managementif_gateway"
 vncdo -s ${vncaddr} key enter
 
 :; echo -e "\n\033[1;36m=>" waiting: cluster setup prompt ..."\033[0m"
@@ -214,4 +214,4 @@ sleep 2
 vnc_screen_text $vncaddr | GREP_COLORS='ms=01;36' grep --color .
 :; echo -e "\n\033[1;36m------------------------------------------------------\033[0m"
 
-:; echo -e "\n\033[1;36m=>" "now ssh(admin@$managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...""\033[0m"
+:; echo -e "\n\033[1;36m=>" "now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...""\033[0m"
