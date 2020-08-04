@@ -27,7 +27,11 @@ tar vxf vsim-netapp-DOT9.7-cm_nodar.ova
 for i in {1..4}; do qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2; done
 ```
 
-### run the automation script. e.g: ontap-simulator-9.7-single-node.sh
+### run the automation script
 ```
-bash ontap-simulator-9.7-single-node.sh
+bash ontap-simulator-9.7-single-node.sh   #deploy a single node ontap cluster
+
+#or
+
+bash ontap-simulator-9.7-two-node.sh      #deploy a two node ontap cluster
 ```
