@@ -1,6 +1,8 @@
 #!/bin/bash
 #configure ontap simulator 9.7 as single cluster
 
+#trap 'vnc_screen_text $vncaddr' SIGINT
+
 getIp4() {
 	local ret
 	local nic=$1
@@ -21,6 +23,7 @@ getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
 
 vnc_screen_text() {
 	local _vncaddr=$1
+	[[ -z "$_vncaddr" ]] && return 1
 	vncdo -s ${_vncaddr} capture _screen.png
 	convert _screen.png  -threshold 30%  _screen2.png
 	gocr -i _screen2.png 2>/dev/null
