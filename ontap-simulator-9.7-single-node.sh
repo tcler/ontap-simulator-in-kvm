@@ -19,22 +19,6 @@ getDefaultIp4() {
 }
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
 
-##please change/cusotmize bellow default configration at first
-vmname=ontap-single
-password=fsqe2020
-cluster_name=fsqe-sn-01
-node_managementif_port=e0c
-node_managementif_addr=
-node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
-node_managementif_gateway=$(getDefaultGateway)
-cluster_managementif_port=e0a
-cluster_managementif_addr=192.168.10.11
-cluster_managementif_mask=255.255.255.0
-cluster_managementif_gateway=192.168.10.1
-dns_domain=192.168.10.1
-dns_addr=192.168.10.1
-controller_located=raycom
-
 vnc_screen_text() {
 	local _vncaddr=$1
 	vncdo -s ${_vncaddr} capture _screen.png
@@ -49,15 +33,37 @@ ocrgrep() {
 	grep -i "${pattern}"
 }
 
+##please change/cusotmize bellow default configration at first
+cluster_name=fsqe-sn-01
+password=fsqe2020
+
+vmnode=ontap-single
+node_managementif_port=e0c
+node_managementif_addr=
+node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
+node_managementif_gateway=$(getDefaultGateway)
+cluster_managementif_port=e0a
+cluster_managementif_addr=192.168.10.11
+cluster_managementif_mask=255.255.255.0
+cluster_managementif_gateway=192.168.10.1
+dns_domain=192.168.10.1
+dns_addr=192.168.10.1
+controller_located=raycom
+
+:; echo -e "\n\033[1;30m================================================================================\033[0m"
+:; echo -e "\033[1;30m=>" "creating network ...""\033[0m"
 netin=ontap-single
 vm netcreate netname=$netin brname=br-ontap subnet=10
 vm net | grep -w $netin >/dev/null || vm netstart $netin
-vm -n $vmname ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
+
+:; echo -e "\n\033[1;30m================================================================================\033[0m"
+:; echo -e "\033[1;30m=>" "node vm start ...""\033[0m"
+vm -n $vmnode ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netin,e1000  --net=$netin,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
 	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2
 
-read vncaddr <<<"$(vm vnc $vmname)"
+read vncaddr <<<"$(vm vnc $vmnode)"
 vncaddr=${vncaddr/:/::}
 [[ -z "$vncaddr" ]] && {
 	echo "{WARN}: something is wrong, exit ..." >&2
