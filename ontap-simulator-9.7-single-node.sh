@@ -1,8 +1,6 @@
 #!/bin/bash
 #configure ontap simulator 9.7 as single cluster
 
-#trap 'vnc_screen_text $vncaddr' SIGINT
-
 getIp4() {
 	local ret
 	local nic=$1
