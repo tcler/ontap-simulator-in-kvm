@@ -82,12 +82,13 @@ ocrgrep() {
 	grep -i "${pattern}"
 }
 vncwait() {
-	local pattern="$1"
-	local tim=${2:-1}
-	local ignored_charset="$3"
+	local addr=$1
+	local pattern="$2"
+	local tim=${3:-1}
+	local ignored_charset="$4"
 
 	echo -e "\n=> waiting: \033[1;36m$pattern\033[0m prompt ..."
-	while true; do vncget $vncaddr | ocrgrep "$pattern" "$ignored_charset" && break; sleep $tim; done
+	while true; do vncget $addr | ocrgrep "$pattern" "$ignored_charset" && break; sleep $tim; done
 }
 
 ##please change/cusotmize bellow default configration at first
@@ -127,101 +128,191 @@ vncaddr=${vncaddr/:/::}
 	exit 1
 }
 
-vncwait "Hit [Enter] to boot immediately" 0.5
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 0.5
 vncputln ${vncaddr}
 
-vncwait "^login:" 5
+vncwait ${vncaddr} "^login:" 5
 [[ -z "$node_managementif_addr" ]] &&
 	node_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
-vncwait "Are you sure you want to reboot node.*? {y|n}:" 5
+vncwait ${vncaddr} "Are you sure you want to reboot node.*? {y|n}:" 5
 vncputln ${vncaddr} "y"
 
-vncwait "Hit [Enter] to boot immediately" 5
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 5
 vncputln ${vncaddr}
 
 : <<'COMM'
-vncwait "Press Ctrl-C for Boot Menu." 5
+vncwait ${vncaddr} "Press Ctrl-C for Boot Menu." 5
 vncput ${vncaddr} key:ctrl-c
 
-vncwait "Selection (1-9)?" 5
+vncwait ${vncaddr} "Selection (1-9)?" 5
 vncputln ${vncaddr} "4"
 
-vncwait "Zero disks, reset config and install a new file system?" 5
+vncwait ${vncaddr} "Zero disks, reset config and install a new file system?" 5
 vncputln ${vncaddr} "yes"
 
-vncwait "This will erase all the data on the disks, are you sure?" 5
+vncwait ${vncaddr} "This will erase all the data on the disks, are you sure?" 5
 vncputln ${vncaddr} "yes"
 
-vncwait "Hit [Enter] to boot immediately" 5
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 5
 vncputln ${vncaddr}
 COMM
 
-vncwait "Type yes to confirm and continue {yes}:" 10
+vncwait ${vncaddr} "Type yes to confirm and continue {yes}:" 10
 vncputln ${vncaddr} "yes"
 
-vncwait "Enter the node management interface port" 2
+vncwait ${vncaddr} "Enter the node management interface port" 2
 vncputln ${vncaddr} "${node_managementif_port}"
 
-vncwait "Enter the node management interface .. address" 2
+vncwait ${vncaddr} "Enter the node management interface .. address" 2
 vncputln ${vncaddr} "$node_managementif_addr"
 
-vncwait "Enter the node management interface netmask" 2
+vncwait ${vncaddr} "Enter the node management interface netmask" 2
 vncputln ${vncaddr} "$node_managementif_mask"
 
-vncwait "Enter the node management interface default gateway" 2
+vncwait ${vncaddr} "Enter the node management interface default gateway" 2
 vncputln ${vncaddr} "$node_managementif_gateway"
 
-vncwait "complete cluster setup using the command line" 2
+vncwait ${vncaddr} "complete cluster setup using the command line" 2
 vncputln ${vncaddr}
 
-vncwait "create a new cluster or join an existing cluster?" 2
+vncwait ${vncaddr} "create a new cluster or join an existing cluster?" 2
 vncputln ${vncaddr} "create"
 
-vncwait "used as a single node cluster?" 2
+vncwait ${vncaddr} "used as a single node cluster?" 2
 vncputln ${vncaddr} "yes"
 
-vncwait "administrator.* password:" 2
+vncwait ${vncaddr} "administrator.* password:" 2
 vncputln ${vncaddr} "$password"
 
-vncwait "Retype the password:" 2
+vncwait ${vncaddr} "Retype the password:" 2
 vncputln ${vncaddr} "$password"
 
-vncwait "Enter the cluster name:" 2
+vncwait ${vncaddr} "Enter the cluster name:" 2
 vncputln ${vncaddr} "$cluster_name"
 
-vncwait "Enter an additional license key" 2
+vncwait ${vncaddr} "Enter an additional license key" 2
 vncputln ${vncaddr}
 
-vncwait "Enter the cluster management interface port" 2
+vncwait ${vncaddr} "Enter the cluster management interface port" 2
 vncputln ${vncaddr} "${cluster_managementif_port}"
 
-vncwait "Enter the cluster management interface .. address" 2
+vncwait ${vncaddr} "Enter the cluster management interface .. address" 2
 vncputln ${vncaddr} "$cluster_managementif_addr"
 
-vncwait "Enter the cluster management interface netmask" 2
+vncwait ${vncaddr} "Enter the cluster management interface netmask" 2
 vncputln ${vncaddr} "$cluster_managementif_mask"
 
-vncwait "Enter the cluster management interface default gateway" 2
+vncwait ${vncaddr} "Enter the cluster management interface default gateway" 2
 vncputln ${vncaddr} "$cluster_managementif_gateway"
 
-vncwait "Enter the DNS domain names" 2
+vncwait ${vncaddr} "Enter the DNS domain names" 2
 vncputln ${vncaddr} "$dns_domain"
 
-vncwait "Enter the name server .. addresses" 2
+vncwait ${vncaddr} "Enter the name server .. addresses" 2
 vncputln ${vncaddr} "$dns_addr"
 
-vncwait "where is the controller located" 2
+vncwait ${vncaddr} "where is the controller located" 2
 vncputln ${vncaddr} "$controller_located"
 
-vncwait "backup destination address" 2
+vncwait ${vncaddr} "backup destination address" 2
 vncputln ${vncaddr}
 sleep 2
 
 :; echo -e "\n\033[1;36m------------------------------------------------------\033[0m"
 vncget $vncaddr | GREP_COLORS='ms=01;36' grep --color .
 :; echo -e "\n\033[1;36m------------------------------------------------------\033[0m"
+
+:; echo -e "\n\033[1;36m=>" "now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...""\033[0m"
+
+:; echo -e "\n\033[1;30m================================================================================\033[0m"
+:; echo -e "\033[1;30m=>" "Delete snapshots ...""\033[0m"
+vncwait ${vncaddr} "^login:" 1
+vncputln ${vncaddr} "admin"
+vncputln ${vncaddr} "${password}"
+
+nodename=${cluster_name}-01
+vncwait ${vncaddr} "${cluster_name}::>" 1
+vncputln ${vncaddr} "run -node ${nodename}"
+vncwait ${vncaddr} "${nodename}>" 1
+vncputln ${vncaddr} "snap delete -a -f vol0"
+vncputln ${vncaddr} "snap sched vol0 0 0 0"
+vncputln ${vncaddr} "snap autodelete vol0 on"
+vncputln ${vncaddr} "snap autodelete vol0 target_free_space 35"
+vncputln ${vncaddr} "snap autodelete vol0"
+vncputln ${vncaddr} "exit"
+
+:; echo -e "\n\033[1;30m================================================================================\033[0m"
+:; echo -e "\033[1;30m=>" "Unlock user diag and set password ...""\033[0m"
+diagpasswd=d1234567
+vncwait ${vncaddr} "${cluster_name}::>" 1
+vncputln ${vncaddr} "security login unlock -username diag"
+vncputln ${vncaddr} "security login password -username diag"
+vncwait ${vncaddr} "Enter a new password:" 1
+vncputln ${vncaddr} "${diagpasswd}"
+vncwait ${vncaddr} "Enter it again:" 1
+vncputln ${vncaddr} "${diagpasswd}"
+
+:; echo -e "\n\033[1;30m================================================================================\033[0m"
+:; echo -e "\033[1;30m=>" "Add disks and create aggregate ...""\033[0m"
+vncputln ${vncaddr} "set -privilege diag"
+vncwait ${vncaddr} "Do you want to continue? {y|n}:" 1
+vncputln ${vncaddr} "y"
+vncwait ${vncaddr} "${cluster_name}::.>" 1
+vncputln ${vncaddr} "systemshell -node ${nodename}"
+vncwait ${vncaddr} "password:" 1
+vncputln ${vncaddr} "${diagpasswd}"
+
+vncwait ${vncaddr} "${nodename}%" 1
+vncputln ${vncaddr} 'setenv PATH "${PATH}:/usr/sbin"'
+vncputln ${vncaddr} 'echo $PATH'
+vncputln ${vncaddr} 'cd /sim/dev'
+vncputln ${vncaddr} 'ls ,disks/'
+vncget ${vncaddr}
+vncputln ${vncaddr} 'vsim_makedisks -h'
+vncget ${vncaddr}
+vncputln ${vncaddr} 'sudo vsim_makedisks -n 14 -t 37 -a 2'
+vncputln ${vncaddr} 'sudo vsim_makedisks -n 14 -t 37 -a 3'
+vncputln ${vncaddr} 'exit'
+vncwait ${vncaddr} "${cluster_name}::.>" 1
+vncputln ${vncaddr} "system node reboot -node ${nodename}"
+vncwait ${vncaddr} "Are you sure you want to reboot node" 1
+vncputln ${vncaddr} "y"
+
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 0.5
+vncputln ${vncaddr}
+
+vncwait ${vncaddr} "^login:" 1
+vncputln ${vncaddr} "admin"
+vncputln ${vncaddr} "${password}"
+vncwait ${vncaddr} "${cluster_name}::>" 1
+while true; do
+	vncputln ${vncaddr} "cluster show"
+	vncget ${vncaddr} | grep "$nodename  *true" && break
+	sleep 5
+done
+vncputln ${vncaddr} "disk assign -all true -node ${nodename}"
+
+vncwait ${vncaddr} "${cluster_name}::>" 1
+vncputln ${vncaddr} "aggr create -aggregate aggr1 -node ${nodename} -disksize 9 -diskcount 28"
+vncputln ${vncaddr} "q"
+vncputln ${vncaddr} "y"
+vncget ${vncaddr}
+
+vncwait ${vncaddr} "${cluster_name}::>" 1
+vncputln ${vncaddr} "aggr create -aggregate aggr2 -node ${nodename} -disksize 1 -diskcount 25"
+vncputln ${vncaddr} "q"
+vncputln ${vncaddr} "y"
+vncget ${vncaddr}
+
+vncwait ${vncaddr} "${cluster_name}::>" 1
+vncputln ${vncaddr} "aggr show"
+vncget ${vncaddr}
+
+vncwait ${vncaddr} "${cluster_name}::>" 1
+vncputln ${vncaddr} "network interface show"
+vncget ${vncaddr}
 
 :; echo -e "\n\033[1;36m=>" "now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...""\033[0m"
