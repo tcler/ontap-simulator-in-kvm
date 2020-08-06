@@ -27,30 +27,66 @@ vncget() {
 	gocr -i _screen2.png 2>/dev/null
 }
 vncput() {
-	local _vncaddr=$1
-	[[ -z "$_vncaddr" ]] && return 1
+	local vncport=$1
 	shift
-	[[ $# -gt 0 ]] && vncdo -s ${_vncaddr} type "$*"
+
+	which vncdo >/dev/null || {
+		echo "{WARN} could not find command 'vncdo'" >&2
+		return 1
+	}
+
+	local msgArray=()
+	for msg; do
+		if [[ -n "$msg" ]]; then
+			if [[ "$msg" = key:* ]]; then
+				msgArray+=("$msg")
+			else
+				regex='[~@#$%^&*()_+|}{":?><!]'
+				_msg="${msg#type:}"
+				if [[ "$_msg" =~ $regex ]]; then
+					while IFS= read -r line; do
+						[[ "$line" =~ $regex ]] || line="type:$line"
+						msgArray+=("$line")
+					done < <(sed -r -e 's;[~!@#$%^&*()_+|}{":?><]+;&\n;g' -e 's;[~!@#$%^&*()_+|}{":?><];\nkey:shift-&;g' <<<"$_msg")
+				else
+					msgArray+=("$msg")
+				fi
+			fi
+			msgArray+=("")
+		else
+			msgArray+=("$msg")
+		fi
+
+	done
+	for msg in "${msgArray[@]}"; do
+		if [[ -n "$msg" ]]; then
+			if [[ "$msg" = key:* ]]; then
+				vncdo -s $vncport key "${msg#key:}"
+			else
+				vncdo -s $vncport type "${msg#type:}"
+			fi
+		else
+			sleep 1
+		fi
+	done
 }
 vncputln() {
-	local _vncaddr=$1
-	[[ -z "$_vncaddr" ]] && return 1
-	shift
-	[[ $# -gt 0 ]] && vncdo -s ${_vncaddr} type "$*"
-	vncdo -s ${_vncaddr} key enter
-}
-vncputkey() {
-	local _vncaddr=$1
-	[[ -z "$_vncaddr" ]] && return 1
-	shift
-	[[ $# -gt 0 ]] && vncdo -s ${_vncaddr} key "$*"
+	vncput "$@" "key:enter"
 }
 
 ocrgrep() {
 	local pattern=$1
-	local ignored_charset=${2:-ifk}
+	local ignored_charset=${2:-ifk[}
 	pattern=$(sed "s,[${ignored_charset}],.,g" <<<"${pattern}")
 	grep -i "${pattern}"
+}
+vncwait() {
+	local pattern="$1"
+	local tim=${2:-1}
+	local ignored_charset="$3"
+
+	echo -e "\n=> waiting: \033[1;36m$pattern\033[0m prompt ..."
+	while true; do vncget $vncaddr | ocrgrep "$pattern" "$ignored_charset" && break; sleep $tim; done
 }
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
@@ -102,128 +138,98 @@ vncaddr=${vncaddr/:/::}
 	exit 1
 }
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: Hit [Enter] to boot immediately prompt ..."\033[0m"
-while sleep 0.5; do vncget $vncaddr | ocrgrep "Hit .Enter. to boot immediately" && break; done
+vncwait "Hit [Enter] to boot immediately" 0.5
 vncputln ${vncaddr}
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: login prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep ^login: && break; done
+vncwait "^login:" 5
 [[ -z "$node1_managementif_addr" ]] &&
 	node1_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
-vncputln ${vncaddr} "admin"
-sleep 2
+vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: reboot confirm prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Are you sure you want to reboot node.*? {y|n}:" && break; done
+vncwait "Are you sure you want to reboot node.*? {y|n}:" 5
 vncputln ${vncaddr} "y"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: Hit [Enter] to boot immediately prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Hit .Enter. to boot immediately" && break; done
+vncwait "Hit [Enter] to boot immediately" 5
 vncputln ${vncaddr}
 
 : <<'COMM'
-:; echo -e "\n\033[1;36m=> [node1]" waiting: Boot Menu ask prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Press Ctrl-C for Boot Menu." && break; done
-vncputkey ${vncaddr} ctrl-c
+vncwait "Press Ctrl-C for Boot Menu." 5
+vncput ${vncaddr} key:ctrl-c
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: Boot Menu list ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Selection (1-9)?" && break; done
+vncwait "Selection (1-9)?" 5
 vncputln ${vncaddr} "4"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: Zero disks, reset config and install a new file system? prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Zero disks, reset config and install a new file system?" && break; done
+vncwait "Zero disks, reset config and install a new file system?" 5
 vncputln ${vncaddr} "yes"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: This will erase all the data on the disks, are you sure? prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "This will erase all the data on the disks, are you sure?" && break; done
+vncwait "This will erase all the data on the disks, are you sure?" 5
 vncputln ${vncaddr} "yes"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: Hit [Enter] to boot immediately prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Hit .Enter. to boot immediately" && break; done
+vncwait "Hit [Enter] to boot immediately" 5
 vncputln ${vncaddr}
 COMM
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: '"Type yes to confirm and continue {yes}:" ...'"\033[0m"
-while sleep 10; do vncget $vncaddr | ocrgrep "Type yes to confirm and continue {yes}:" && break; done
+vncwait "Type yes to confirm and continue {yes}:" 10
 vncputln ${vncaddr} "yes"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: node management interface port prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the node management interface port" && break; done
+vncwait "Enter the node management interface port" 2
 vncputln ${vncaddr} "${node1_managementif_port}"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: node management interface ip address prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the node management interface .. address" && break; done
+vncwait "Enter the node management interface .. address" 2
 vncputln ${vncaddr} "$node1_managementif_addr"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: node management interface ip netmask prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the node management interface netmask" && break; done
+vncwait "Enter the node management interface netmask" 2
 vncputln ${vncaddr} "$node1_managementif_mask"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: node management interface gateway prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the node management interface default gateway" && break; done
+vncwait "Enter the node management interface default gateway" 2
 vncputln ${vncaddr} "$node1_managementif_gateway"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: cluster setup prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "cluster setup using the command line" && break; done
+vncwait "complete cluster setup using the command line" 2
 vncputln ${vncaddr}
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: create a new cluster or join an existing cluster? prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "create a new cluster or join an" && break; done
+vncwait "create a new cluster or join an existing cluster?" 2
 vncputln ${vncaddr} "create"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: as a single node cluster? prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "used as a single node cluster?" && break; done
+vncwait "used as a single node cluster?" 2
 vncputln ${vncaddr} "no"
 
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: Do you want to use this configuration? ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Do you want to use this configuration?" && break; done
+vncwait "Do you want to use this configuration?" 2
 node1_private_ips=$(vncget $vncaddr|sed -nr '/^.*(169.254.[0-9]+.[0-9]+).*$/{s//\1/; p}')
 vncputln ${vncaddr} "yes"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: 'administrators(username "admin") password prompt ...'"\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "administrator.* password:" && break; done
+vncwait "administrator.* password:" 2
 vncputln ${vncaddr} "$password"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: password retype prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Retype the password:" && break; done
+vncwait "Retype the password:" 2
 vncputln ${vncaddr} "$password"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: cluster name ask prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the cluster name:" && break; done
+vncwait "Enter the cluster name:" 2
 vncputln ${vncaddr} "$cluster_name"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: license key prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter an additional license key" && break; done
+vncwait "Enter an additional license key" 2
 vncputln ${vncaddr}
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: cluster management interface port prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the cluster management interface port" && break; done
+vncwait "Enter the cluster management interface port" 2
 vncputln ${vncaddr} "${cluster_managementif_port}"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: cluster management interface ip address prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the cluster management interface .. address" && break; done
+vncwait "Enter the cluster management interface .. address" 2
 vncputln ${vncaddr} "$cluster_managementif_addr"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: cluster management interface ip netmask prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the cluster management interface netmask" && break; done
+vncwait "Enter the cluster management interface netmask" 2
 vncputln ${vncaddr} "$cluster_managementif_mask"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: cluster management interface gateway prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the cluster management interface default gateway" && break; done
+vncwait "Enter the cluster management interface default gateway" 2
 vncputln ${vncaddr} "$cluster_managementif_gateway"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: DNS domain names ask prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the DNS domain names" && break; done
+vncwait "Enter the DNS domain names" 2
 vncputln ${vncaddr} "$dns_domain"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: name server IP addresses ask prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the name server .. addresses" && break; done
+vncwait "Enter the name server .. addresses" 2
 vncputln ${vncaddr} "$dns_addr"
 
-:; echo -e "\n\033[1;36m=> [node1]" waiting: where is the controller located prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "controller located" && break; done
+vncwait "where is thecontroller located" 2
 vncputln ${vncaddr} "$controller_located"
 sleep 2
 
@@ -255,97 +261,73 @@ vncaddr=${vncaddr/:/::}
 	exit 1
 }
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: Hit [Enter] to boot immediately prompt ..."\033[0m"
-while sleep 0.5; do vncget $vncaddr | ocrgrep "Hit .Enter. to boot immediately" && break; done
+vncwait "Hit [Enter] to boot immediately" 0.5
 vncput ${vncaddr} " "
-while sleep 0.5; do vncget $vncaddr | ocrgrep "VLOADER>" && break; done
+vncwait "VLOADER>" 0.5
 vncputln ${vncaddr} "setenv SYS_SERIAL_NUM 4034389-06-2"
-sleep 1
 vncputln ${vncaddr} "setenv bootarg.nvram.sysid 4034389062"
-sleep 1
 vncputln ${vncaddr} "printenv SYS_SERIAL_NUM"
-sleep 1
 vncputln ${vncaddr} "printenv bootarg.nvram.sysid"
-sleep 1
 vncputln ${vncaddr} "boot"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: login prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep ^login: && break; done
+vncwait "^login:" 5
 [[ -z "$node2_managementif_addr" ]] &&
 	node2_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
-vncputln ${vncaddr} "admin"
-sleep 2
+vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: reboot confirm prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Are you sure you want to reboot node.*? {y|n}:" && break; done
+vncwait "Are you sure you want to reboot node.*? {y|n}:" 5
 vncputln ${vncaddr} "y"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: Hit [Enter] to boot immediately prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Hit .Enter. to boot immediately" && break; done
+vncwait "Hit [Enter] to boot immediately" 5
 vncdo -s ${vncaddr} key enter
 
 : <<'COMM'
-:; echo -e "\n\033[1;36m=> [node2]" waiting: Boot Menu ask prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Press Ctrl-C for Boot Menu." && break; done
-vncputkey ${vncaddr} ctrl-c
+vncwait "Press Ctrl-C for Boot Menu." 5
+vncput ${vncaddr} key:ctrl-c
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: Boot Menu list ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Selection (1-9)?" && break; done
+vncwait "Selection (1-9)?" 5
 vncputln ${vncaddr} "4"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: Zero disks, reset config and install a new file system? prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Zero disks, reset config and install a new file system?" && break; done
+vncwait "Zero disks, reset config and install a new file system?" 5
 vncputln ${vncaddr} "yes"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: This will erase all the data on the disks, are you sure? prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "This will erase all the data on the disks, are you sure?" && break; done
+vncwait "This will erase all the data on the disks, are you sure?" 5
 vncputln ${vncaddr} "yes"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: Hit [Enter] to boot immediately prompt ..."\033[0m"
-while sleep 5; do vncget $vncaddr | ocrgrep "Hit .Enter. to boot immediately" && break; done
+vncwait "Hit [Enter] to boot immediately" 5
 vncputln ${vncaddr}
 COMM
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: '"Type yes to confirm and continue {yes}:" ...'"\033[0m"
-while sleep 10; do vncget $vncaddr | ocrgrep "Type yes to confirm and continue {yes}:" && break; done
+vncwait "Type yes to confirm and continue {yes}:" 10
 vncputln ${vncaddr} "yes"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: node management interface port prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the node management interface port" && break; done
+vncwait "Enter the node management interface port" 2
 vncputln ${vncaddr} "${node2_managementif_port}"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: node management interface ip address prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the node management interface .. address" && break; done
+vncwait "Enter the node management interface .. address" 2
 vncputln ${vncaddr} "$node2_managementif_addr"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: node management interface ip netmask prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the node management interface netmask" && break; done
+vncwait "Enter the node management interface netmask" 2
 vncputln ${vncaddr} "$node2_managementif_mask"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: node management interface gateway prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Enter the node management interface default gateway" && break; done
+vncwait "Enter the node management interface default gateway" 2
 vncputln ${vncaddr} "$node2_managementif_gateway"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: cluster setup prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "cluster setup using the command line" && break; done
+vncwait "complete cluster setup using the command line" 2
 vncputln ${vncaddr}
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: create a new cluster or join an existing cluster? prompt ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "create a new cluster or join an" && break; done
+vncwait "create a new cluster or join an existing cluster?" 2
 vncputln ${vncaddr} "join"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: Do you want to use this configuration? ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "Do you want to use this configuration?" && break; done
+vncwait "Do you want to use this configuration?" 2
 vncputln ${vncaddr} "yes"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: cluster you want to join: ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "cluster you want to join:" && break; done
+vncwait "cluster you want to join:" 2
 read node1_private_ip <<<"$node1_private_ips"
 vncputln ${vncaddr} "$node1_private_ip"
 
-:; echo -e "\n\033[1;36m=> [node2]" waiting: This node has been joined to cluster ..."\033[0m"
-while sleep 2; do vncget $vncaddr | ocrgrep "This node has been joined to cluster" && break; done
+vncwait "This node has been joined to cluster" 2
 
 :; echo -e "\n\033[1;36m--------------------------------------------------------------------------------\033[0m"
 vncget $vncaddr | GREP_COLORS='ms=01;36' grep --color .
