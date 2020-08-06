@@ -225,7 +225,7 @@ sleep 2
 vncget $vncaddr | GREP_COLORS='ms=01;36' grep --color .
 :; echo -e "\n\033[1;36m------------------------------------------------------\033[0m"
 
-:; echo -e "\n\033[1;36m=>" "now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...""\033[0m"
+:; echo -e "\n\033[1;36m=> now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...\033[0m"
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> Delete snapshots ...\033[0m"
@@ -315,4 +315,4 @@ vncwait ${vncaddr} "${cluster_name}::>" 1
 vncputln ${vncaddr} "network interface show"
 vncget ${vncaddr}
 
-:; echo -e "\n\033[1;36m=>" "now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...""\033[0m"
+:; echo -e "\n\033[1;36m=> now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...\033[0m"
