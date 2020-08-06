@@ -81,12 +81,13 @@ ocrgrep() {
 	grep -i "${pattern}"
 }
 vncwait() {
-	local pattern="$1"
-	local tim=${2:-1}
-	local ignored_charset="$3"
+	local addr=$1
+	local pattern="$2"
+	local tim=${3:-1}
+	local ignored_charset="$4"
 
 	echo -e "\n=> waiting: \033[1;36m$pattern\033[0m prompt ..."
-	while true; do vncget $vncaddr | ocrgrep "$pattern" "$ignored_charset" && break; sleep $tim; done
+	while true; do vncget $addr | ocrgrep "$pattern" "$ignored_charset" && break; sleep $tim; done
 }
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
@@ -138,98 +139,98 @@ vncaddr=${vncaddr/:/::}
 	exit 1
 }
 
-vncwait "Hit [Enter] to boot immediately" 0.5
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 0.5
 vncputln ${vncaddr}
 
-vncwait "^login:" 5
+vncwait ${vncaddr} "^login:" 5
 [[ -z "$node1_managementif_addr" ]] &&
 	node1_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
-vncwait "Are you sure you want to reboot node.*? {y|n}:" 5
+vncwait ${vncaddr} "Are you sure you want to reboot node.*? {y|n}:" 5
 vncputln ${vncaddr} "y"
 
-vncwait "Hit [Enter] to boot immediately" 5
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 5
 vncputln ${vncaddr}
 
 : <<'COMM'
-vncwait "Press Ctrl-C for Boot Menu." 5
+vncwait ${vncaddr} "Press Ctrl-C for Boot Menu." 5
 vncput ${vncaddr} key:ctrl-c
 
-vncwait "Selection (1-9)?" 5
+vncwait ${vncaddr} "Selection (1-9)?" 5
 vncputln ${vncaddr} "4"
 
-vncwait "Zero disks, reset config and install a new file system?" 5
+vncwait ${vncaddr} "Zero disks, reset config and install a new file system?" 5
 vncputln ${vncaddr} "yes"
 
-vncwait "This will erase all the data on the disks, are you sure?" 5
+vncwait ${vncaddr} "This will erase all the data on the disks, are you sure?" 5
 vncputln ${vncaddr} "yes"
 
-vncwait "Hit [Enter] to boot immediately" 5
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 5
 vncputln ${vncaddr}
 COMM
 
-vncwait "Type yes to confirm and continue {yes}:" 10
+vncwait ${vncaddr} "Type yes to confirm and continue {yes}:" 10
 vncputln ${vncaddr} "yes"
 
-vncwait "Enter the node management interface port" 2
+vncwait ${vncaddr} "Enter the node management interface port" 2
 vncputln ${vncaddr} "${node1_managementif_port}"
 
-vncwait "Enter the node management interface .. address" 2
+vncwait ${vncaddr} "Enter the node management interface .. address" 2
 vncputln ${vncaddr} "$node1_managementif_addr"
 
-vncwait "Enter the node management interface netmask" 2
+vncwait ${vncaddr} "Enter the node management interface netmask" 2
 vncputln ${vncaddr} "$node1_managementif_mask"
 
-vncwait "Enter the node management interface default gateway" 2
+vncwait ${vncaddr} "Enter the node management interface default gateway" 2
 vncputln ${vncaddr} "$node1_managementif_gateway"
 
-vncwait "complete cluster setup using the command line" 2
+vncwait ${vncaddr} "complete cluster setup using the command line" 2
 vncputln ${vncaddr}
 
-vncwait "create a new cluster or join an existing cluster?" 2
+vncwait ${vncaddr} "create a new cluster or join an existing cluster?" 2
 vncputln ${vncaddr} "create"
 
-vncwait "used as a single node cluster?" 2
+vncwait ${vncaddr} "used as a single node cluster?" 2
 vncputln ${vncaddr} "no"
 
 
-vncwait "Do you want to use this configuration?" 2
+vncwait ${vncaddr} "Do you want to use this configuration?" 2
 node1_private_ips=$(vncget $vncaddr|sed -nr '/^.*(169.254.[0-9]+.[0-9]+).*$/{s//\1/; p}')
 vncputln ${vncaddr} "yes"
 
-vncwait "administrator.* password:" 2
+vncwait ${vncaddr} "administrator.* password:" 2
 vncputln ${vncaddr} "$password"
 
-vncwait "Retype the password:" 2
+vncwait ${vncaddr} "Retype the password:" 2
 vncputln ${vncaddr} "$password"
 
-vncwait "Enter the cluster name:" 2
+vncwait ${vncaddr} "Enter the cluster name:" 2
 vncputln ${vncaddr} "$cluster_name"
 
-vncwait "Enter an additional license key" 2
+vncwait ${vncaddr} "Enter an additional license key" 2
 vncputln ${vncaddr}
 
-vncwait "Enter the cluster management interface port" 2
+vncwait ${vncaddr} "Enter the cluster management interface port" 2
 vncputln ${vncaddr} "${cluster_managementif_port}"
 
-vncwait "Enter the cluster management interface .. address" 2
+vncwait ${vncaddr} "Enter the cluster management interface .. address" 2
 vncputln ${vncaddr} "$cluster_managementif_addr"
 
-vncwait "Enter the cluster management interface netmask" 2
+vncwait ${vncaddr} "Enter the cluster management interface netmask" 2
 vncputln ${vncaddr} "$cluster_managementif_mask"
 
-vncwait "Enter the cluster management interface default gateway" 2
+vncwait ${vncaddr} "Enter the cluster management interface default gateway" 2
 vncputln ${vncaddr} "$cluster_managementif_gateway"
 
-vncwait "Enter the DNS domain names" 2
+vncwait ${vncaddr} "Enter the DNS domain names" 2
 vncputln ${vncaddr} "$dns_domain"
 
-vncwait "Enter the name server .. addresses" 2
+vncwait ${vncaddr} "Enter the name server .. addresses" 2
 vncputln ${vncaddr} "$dns_addr"
 
-vncwait "where is thecontroller located" 2
+vncwait ${vncaddr} "where is thecontroller located" 2
 vncputln ${vncaddr} "$controller_located"
 sleep 2
 
@@ -261,73 +262,73 @@ vncaddr=${vncaddr/:/::}
 	exit 1
 }
 
-vncwait "Hit [Enter] to boot immediately" 0.5
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 0.5
 vncput ${vncaddr} " "
-vncwait "VLOADER>" 0.5
+vncwait ${vncaddr} "VLOADER>" 0.5
 vncputln ${vncaddr} "setenv SYS_SERIAL_NUM 4034389-06-2"
 vncputln ${vncaddr} "setenv bootarg.nvram.sysid 4034389062"
 vncputln ${vncaddr} "printenv SYS_SERIAL_NUM"
 vncputln ${vncaddr} "printenv bootarg.nvram.sysid"
 vncputln ${vncaddr} "boot"
 
-vncwait "^login:" 5
+vncwait ${vncaddr} "^login:" 5
 [[ -z "$node2_managementif_addr" ]] &&
 	node2_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
-vncwait "Are you sure you want to reboot node.*? {y|n}:" 5
+vncwait ${vncaddr} "Are you sure you want to reboot node.*? {y|n}:" 5
 vncputln ${vncaddr} "y"
 
-vncwait "Hit [Enter] to boot immediately" 5
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 5
 vncdo -s ${vncaddr} key enter
 
 : <<'COMM'
-vncwait "Press Ctrl-C for Boot Menu." 5
+vncwait ${vncaddr} "Press Ctrl-C for Boot Menu." 5
 vncput ${vncaddr} key:ctrl-c
 
-vncwait "Selection (1-9)?" 5
+vncwait ${vncaddr} "Selection (1-9)?" 5
 vncputln ${vncaddr} "4"
 
-vncwait "Zero disks, reset config and install a new file system?" 5
+vncwait ${vncaddr} "Zero disks, reset config and install a new file system?" 5
 vncputln ${vncaddr} "yes"
 
-vncwait "This will erase all the data on the disks, are you sure?" 5
+vncwait ${vncaddr} "This will erase all the data on the disks, are you sure?" 5
 vncputln ${vncaddr} "yes"
 
-vncwait "Hit [Enter] to boot immediately" 5
+vncwait ${vncaddr} "Hit [Enter] to boot immediately" 5
 vncputln ${vncaddr}
 COMM
 
-vncwait "Type yes to confirm and continue {yes}:" 10
+vncwait ${vncaddr} "Type yes to confirm and continue {yes}:" 10
 vncputln ${vncaddr} "yes"
 
-vncwait "Enter the node management interface port" 2
+vncwait ${vncaddr} "Enter the node management interface port" 2
 vncputln ${vncaddr} "${node2_managementif_port}"
 
-vncwait "Enter the node management interface .. address" 2
+vncwait ${vncaddr} "Enter the node management interface .. address" 2
 vncputln ${vncaddr} "$node2_managementif_addr"
 
-vncwait "Enter the node management interface netmask" 2
+vncwait ${vncaddr} "Enter the node management interface netmask" 2
 vncputln ${vncaddr} "$node2_managementif_mask"
 
-vncwait "Enter the node management interface default gateway" 2
+vncwait ${vncaddr} "Enter the node management interface default gateway" 2
 vncputln ${vncaddr} "$node2_managementif_gateway"
 
-vncwait "complete cluster setup using the command line" 2
+vncwait ${vncaddr} "complete cluster setup using the command line" 2
 vncputln ${vncaddr}
 
-vncwait "create a new cluster or join an existing cluster?" 2
+vncwait ${vncaddr} "create a new cluster or join an existing cluster?" 2
 vncputln ${vncaddr} "join"
 
-vncwait "Do you want to use this configuration?" 2
+vncwait ${vncaddr} "Do you want to use this configuration?" 2
 vncputln ${vncaddr} "yes"
 
-vncwait "cluster you want to join:" 2
+vncwait ${vncaddr} "cluster you want to join:" 2
 read node1_private_ip <<<"$node1_private_ips"
 vncputln ${vncaddr} "$node1_private_ip"
 
-vncwait "This node has been joined to cluster" 2
+vncwait ${vncaddr} "This node has been joined to cluster" 2
 
 :; echo -e "\n\033[1;36m--------------------------------------------------------------------------------\033[0m"
 vncget $vncaddr | GREP_COLORS='ms=01;36' grep --color .
