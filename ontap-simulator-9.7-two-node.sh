@@ -114,7 +114,7 @@ password=fsqe2020
 #node1
 vmnode1=ontap-node1
 node1_managementif_port=e0c
-node1_managementif_addr=10.66.12.176
+node1_managementif_addr=
 node1_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node1_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0d
@@ -244,7 +244,7 @@ vncget $vncaddr | GREP_COLORS='ms=01;36' grep --color .
 #node2
 vmnode2=ontap-node2
 node2_managementif_port=e0c
-node2_managementif_addr=10.66.12.160
+node2_managementif_addr=
 node2_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node2_managementif_gateway=$(getDefaultGateway)
 
