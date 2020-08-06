@@ -109,13 +109,13 @@ dns_addr=192.168.10.1
 controller_located=raycom
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=>" "creating network ...""\033[0m"
+:; echo -e "\033[1;30m=> creating network ...\033[0m"
 netin=ontap-single
 vm netcreate netname=$netin brname=br-ontap subnet=10
 vm net | grep -w $netin >/dev/null || vm netstart $netin
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=>" "node vm start ...""\033[0m"
+:; echo -e "\033[1;30m=> node vm start ...\033[0m"
 vm -n $vmnode ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netin,e1000  --net=$netin,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
@@ -228,7 +228,7 @@ vncget $vncaddr | GREP_COLORS='ms=01;36' grep --color .
 :; echo -e "\n\033[1;36m=>" "now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...""\033[0m"
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=>" "Delete snapshots ...""\033[0m"
+:; echo -e "\033[1;30m=> Delete snapshots ...\033[0m"
 vncwait ${vncaddr} "^login:" 1
 vncputln ${vncaddr} "admin"
 vncputln ${vncaddr} "${password}"
@@ -245,7 +245,7 @@ vncputln ${vncaddr} "snap autodelete vol0"
 vncputln ${vncaddr} "exit"
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=>" "Unlock user diag and set password ...""\033[0m"
+:; echo -e "\033[1;30m=> Unlock user diag and set password ...\033[0m"
 diagpasswd=d1234567
 vncwait ${vncaddr} "${cluster_name}::>" 1
 vncputln ${vncaddr} "security login unlock -username diag"
@@ -256,7 +256,7 @@ vncwait ${vncaddr} "Enter it again:" 1
 vncputln ${vncaddr} "${diagpasswd}"
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=>" "Add disks and create aggregate ...""\033[0m"
+:; echo -e "\033[1;30m=> Add disks and create aggregate ...\033[0m"
 vncputln ${vncaddr} "set -privilege diag"
 vncwait ${vncaddr} "Do you want to continue? {y|n}:" 1
 vncputln ${vncaddr} "y"
