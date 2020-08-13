@@ -1,6 +1,11 @@
 #!/bin/bash
 #install and configure two inode cluster with ontap simulator 9.7
 
+rundir=/tmp/ontap-simulator-t-$$
+mkdir -p $rundir
+clean() { rm -rf $rundir; }
+trap "clean" EXIT
+
 getIp4() {
 	local ret
 	local nic=$1
@@ -22,9 +27,9 @@ getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
 vncget() {
 	local _vncaddr=$1
 	[[ -z "$_vncaddr" ]] && return 1
-	vncdo -s ${_vncaddr} capture _screen.png
-	convert _screen.png  -threshold 30%  _screen2.png
-	gocr -i _screen2.png 2>/dev/null
+	vncdo -s ${_vncaddr} capture $rundir/_screen.png
+	convert $rundir/_screen.png  -threshold 30%  $rundir/_screen2.png
+	gocr -i $rundir/_screen2.png 2>/dev/null
 }
 vncput() {
 	local vncport=$1
@@ -415,13 +420,23 @@ for vmnode in $vmnode1 $vmnode2; do
 	vncget ${vncaddr}
 
 	vncwait ${vncaddr} "${cluster_name}::>" 1
-	vncputln ${vncaddr} "aggr create -aggregate aggr${idx}_2 -node ${nodename} -disksize 1 -diskcount 25"
+	vncputln ${vncaddr} "aggr create -aggregate aggr${idx}_2 -node ${nodename} -disksize 1 -diskcount 16"
 	vncputln ${vncaddr} "q"
 	vncputln ${vncaddr} "y"
 	vncget ${vncaddr}
 
 	vncwait ${vncaddr} "${cluster_name}::>" 1
+	vncputln ${vncaddr} "aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 9"
+	vncputln ${vncaddr} "y"
+	vncputln ${vncaddr} "y"
+
+	vncwait ${vncaddr} "${cluster_name}::>" 1
+	vncputln ${vncaddr} "vol modify -vserver ${nodename} -volume vol0 -size 4G"
+
+	vncwait ${vncaddr} "${cluster_name}::>" 1
 	vncputln ${vncaddr} "aggr show"
+	vncwait ${vncaddr} "${cluster_name}::>" 1
+	vncputln ${vncaddr} "vol show"
 	vncget ${vncaddr}
 
 	vncwait ${vncaddr} "${cluster_name}::>" 1
