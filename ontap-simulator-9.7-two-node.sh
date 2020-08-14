@@ -97,18 +97,13 @@ vncwait() {
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> creating networks ...\033[0m"
-netcluster=ontap2-cluster
-vm netcreate netname=$netcluster brname=br-ontap2 subnet=20
+netcluster=ontap2-cluster  #e0a e0b
+vm netcreate netname=$netcluster brname=br-ontap2 forward=
 vm net | grep -w $netcluster >/dev/null || vm netstart $netcluster
 
-netdata=ontap2-data
-vm netcreate netname=$netdata brname=br-ontap2-data subnet=21
+netdata=ontap2-data  #e0d #e0e
+vm netcreate netname=$netdata brname=br-ontap2-data subnet=20
 vm net | grep -w $netdata >/dev/null || vm netstart $netdata
-
-netha=ontap2-ha
-vm netcreate netname=$netha brname=br-ontap2-ha forward=
-vm net | grep -w $netha >/dev/null || vm netstart $netha
-
 
 #===============================================================================
 #cluster
@@ -119,22 +114,25 @@ password=fsqe2020
 #node1
 vmnode1=ontap-node1
 node1_managementif_port=e0c
-node1_managementif_addr=
+node1_managementif_addr= #10.66.12.176
 node1_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node1_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0d
-cluster_managementif_addr=192.168.21.11
+cluster_managementif_addr=192.168.20.11
 cluster_managementif_mask=255.255.255.0
-cluster_managementif_gateway=192.168.21.1
-dns_domain=192.168.21.1
-dns_addr=192.168.21.1
+cluster_managementif_gateway=192.168.20.1
+dns_domain=192.168.20.1
+dns_addr=192.168.20.1
 controller_located=raycom
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> [$vmnode1] start ...\033[0m"
 vm -n $vmnode1 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
-	--net=$netcluster,e1000 --net=$netcluster,e1000 --net-macvtap=-,e1000 --net=$netdata,e1000 --net=$netha,e1000 \
+	--net=$netcluster,e1000 --net=$netcluster,e1000 \
+	--net-macvtap=-,e1000 \
+	--net=$netdata,e1000 --net=$netdata,e1000 \
+	--net-macvtap=-,e1000 \
 	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2
 
 read vncaddr <<<"$(vm vnc $vmnode1)"
@@ -249,7 +247,7 @@ vncget $vncaddr | GREP_COLORS='ms=01;36' grep --color .
 #node2
 vmnode2=ontap-node2
 node2_managementif_port=e0c
-node2_managementif_addr=
+node2_managementif_addr= #10.66.12.160
 node2_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node2_managementif_gateway=$(getDefaultGateway)
 
@@ -257,7 +255,10 @@ node2_managementif_gateway=$(getDefaultGateway)
 :; echo -e "\033[1;30m=> [$vmnode2] start ...\033[0m"
 vm -n $vmnode2 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
-	--net=$netcluster,e1000 --net=$netcluster,e1000 --net-macvtap=-,e1000 --net=$netdata,e1000 --net=$netha,e1000 \
+	--net=$netcluster,e1000 --net=$netcluster,e1000 \
+	--net-macvtap=-,e1000 \
+	--net=$netdata,e1000 --net=$netdata,e1000 \
+	--net-macvtap=-,e1000 \
 	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2
 
 read vncaddr <<<"$(vm vnc $vmnode2)"
