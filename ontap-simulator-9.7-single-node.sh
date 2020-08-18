@@ -333,3 +333,20 @@ vncputln ${vncaddr} "network interface show"
 vncget ${vncaddr}
 
 :; echo -e "\n\033[1;36m=> now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...\033[0m"
+
+expect -c "spawn ssh admin@$cluster_managementif_addr
+	expect {Password:} {
+		send \"${password}\\r\"
+	}
+
+	expect {${cluster_name}::>} {
+		send \"system license add -license-code SMKQROWJNQYQSDAAAAAAAAAAAAAA\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"system license add -license-code YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"exit\r\"
+	}
+	exit
+"

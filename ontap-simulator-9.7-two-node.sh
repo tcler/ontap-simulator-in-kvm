@@ -450,3 +450,20 @@ for vmnode in $vmnode1 $vmnode2; do
 
 	let idx++
 done
+
+expect -c "spawn ssh admin@$cluster_managementif_addr
+	expect {Password:} {
+		send \"${password}\\r\"
+	}
+
+	expect {${cluster_name}::>} {
+		send \"system license add -license-code SMKQROWJNQYQSDAAAAAAAAAAAAAA\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"system license add -license-code YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA,MHEYKUNFXMSMUCEZFAAAAAAAAAAA,ANGJKUNFXMSMUCEZFAAAAAAAAAAA\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"exit\r\"
+	}
+	exit
+"
