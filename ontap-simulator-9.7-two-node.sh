@@ -441,6 +441,8 @@ for vmnode in $vmnode1 $vmnode2; do
 	vncget ${vncaddr}
 
 	vncwait ${vncaddr} "${cluster_name}::>" 1
+	vncputln ${vncaddr} "network port show"
+	vncwait ${vncaddr} "${cluster_name}::>" 1
 	vncputln ${vncaddr} "network interface show"
 	vncget ${vncaddr}
 

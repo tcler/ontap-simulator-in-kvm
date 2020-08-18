@@ -327,6 +327,8 @@ vncputln ${vncaddr} "vol show"
 vncget ${vncaddr}
 
 vncwait ${vncaddr} "${cluster_name}::>" 1
+vncputln ${vncaddr} "network port show"
+vncwait ${vncaddr} "${cluster_name}::>" 1
 vncputln ${vncaddr} "network interface show"
 vncget ${vncaddr}
 
