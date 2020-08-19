@@ -81,7 +81,7 @@ vncputln() {
 
 ocrgrep() {
 	local pattern=$1
-	local ignored_charset=${2:-ifk[}
+	local ignored_charset=${2:-ifkwe[|:}
 	pattern=$(sed "s,[${ignored_charset}],.,g" <<<"${pattern}")
 	grep -i "${pattern}"
 }
@@ -464,6 +464,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {${cluster_name}::>} {
 		send \"network interface show\\r\"
 	}
+
 	expect {${cluster_name}::>} {
 		send \"exit\\r\"
 	}
