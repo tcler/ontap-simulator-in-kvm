@@ -433,17 +433,6 @@ for vmnode in $vmnode1 $vmnode2; do
 
 	vncwait ${vncaddr} "${cluster_name}::>" 1
 	vncputln ${vncaddr} "vol modify -vserver ${nodename} -volume vol0 -size 4G"
-
-	vncwait ${vncaddr} "${cluster_name}::>" 1
-	vncputln ${vncaddr} "aggr show"
-	vncwait ${vncaddr} "${cluster_name}::>" 1
-	vncputln ${vncaddr} "vol show"
-	vncget ${vncaddr}
-
-	vncwait ${vncaddr} "${cluster_name}::>" 1
-	vncputln ${vncaddr} "network port show"
-	vncwait ${vncaddr} "${cluster_name}::>" 1
-	vncputln ${vncaddr} "network interface show"
 	vncget ${vncaddr}
 
 	:; echo -e "\n\033[1;36m=> now ssh(admin@$node1_managementif_addr, admin@$node2_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...\033[0m"
@@ -451,19 +440,32 @@ for vmnode in $vmnode1 $vmnode2; do
 	let idx++
 done
 
+
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {Password:} {
 		send \"${password}\\r\"
 	}
+	expect {${cluster_name}::>} {
+		send \"system license add -license-code SMKQROWJNQYQSDAAAAAAAAAAAAAA\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"system license add -license-code YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA,MHEYKUNFXMSMUCEZFAAAAAAAAAAA,ANGJKUNFXMSMUCEZFAAAAAAAAAAA\\r\"
+	}
 
 	expect {${cluster_name}::>} {
-		send \"system license add -license-code SMKQROWJNQYQSDAAAAAAAAAAAAAA\r\"
+		send \"aggr show\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"system license add -license-code YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA,MHEYKUNFXMSMUCEZFAAAAAAAAAAA,ANGJKUNFXMSMUCEZFAAAAAAAAAAA\r\"
+		send \"vol show\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"exit\r\"
+		send \"network port show\\r\"
 	}
-	exit
+	expect {${cluster_name}::>} {
+		send \"network interface show\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"exit\\r\"
+	}
+	expect eof
 "
