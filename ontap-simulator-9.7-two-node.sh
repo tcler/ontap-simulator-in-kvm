@@ -31,6 +31,8 @@ vncget() {
 	convert $rundir/_screen.png  -threshold 30%  $rundir/_screen2.png
 	gocr -i $rundir/_screen2.png 2>/dev/null
 }
+colorvncget() { vncget "$@" | GREP_COLORS='ms=01;30;47' grep --color .; }
+
 vncput() {
 	local vncport=$1
 	shift
@@ -39,6 +41,8 @@ vncput() {
 		echo "{WARN} could not find command 'vncdo'" >&2
 		return 1
 	}
+
+	[[ -n "$*" ]] && echo -e "\033[1;33m[vncput>$vncport] $*\033[0m"
 
 	local msgArray=()
 	for msg; do
@@ -107,7 +111,7 @@ vm net | grep -w $netdata >/dev/null || vm netstart $netdata
 
 #===============================================================================
 #cluster
-cluster_name=fsqe-2n-01
+cluster_name=fsqe-2nc1
 password=fsqe2020
 
 #===============================================================================
@@ -238,7 +242,7 @@ vncputln ${vncaddr} "$controller_located"
 sleep 2
 
 :; echo -e "\n\033[1;36m--------------------------------------------------------------------------------\033[0m"
-vncget $vncaddr | GREP_COLORS='ms=01;36' grep --color .
+colorvncget $vncaddr
 :; echo -e "\n\033[1;36m--------------------------------------------------------------------------------\033[0m"
 
 :; echo -e "\n\033[1;36m=> now ssh(admin@$node1_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...\033[0m"
@@ -287,7 +291,7 @@ vncwait ${vncaddr} "Are you sure you want to reboot node.*? {y|n}:" 5
 vncputln ${vncaddr} "y"
 
 vncwait ${vncaddr} "Hit [Enter] to boot immediately" 5
-vncdo -s ${vncaddr} key enter
+vncputln ${vncaddr}
 
 : <<'COMM'
 vncwait ${vncaddr} "Press Ctrl-C for Boot Menu." 5
@@ -337,7 +341,7 @@ vncputln ${vncaddr} "$node1_private_ip"
 vncwait ${vncaddr} "This node has been joined to cluster" 2
 
 :; echo -e "\n\033[1;36m--------------------------------------------------------------------------------\033[0m"
-vncget $vncaddr | GREP_COLORS='ms=01;36' grep --color .
+colorvncget $vncaddr
 :; echo -e "\n\033[1;36m--------------------------------------------------------------------------------\033[0m"
 
 :; echo -e "\n\033[1;36m=> now ssh(admin@$node1_managementif_addr, admin@$node2_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...\033[0m"
@@ -381,7 +385,7 @@ for vmnode in $vmnode1 $vmnode2; do
 	vncputln ${vncaddr} "y"
 	vncwait ${vncaddr} "${cluster_name}::.>" 1
 	vncputln ${vncaddr} "systemshell -node ${nodename}"
-	vncwait ${vncaddr} "password:" 1
+	vncwait ${vncaddr} "diag@127.0.0.1's password:" 1
 	vncputln ${vncaddr} "${diagpasswd}"
 
 	vncwait ${vncaddr} "${nodename}%" 1
@@ -389,9 +393,9 @@ for vmnode in $vmnode1 $vmnode2; do
 	vncputln ${vncaddr} 'echo $PATH'
 	vncputln ${vncaddr} 'cd /sim/dev'
 	vncputln ${vncaddr} 'ls ,disks/'
-	vncget ${vncaddr}
+	colorvncget $vncaddr
 	vncputln ${vncaddr} 'vsim_makedisks -h'
-	vncget ${vncaddr}
+	colorvncget $vncaddr
 	vncputln ${vncaddr} 'sudo vsim_makedisks -n 14 -t 37 -a 2'
 	vncputln ${vncaddr} 'sudo vsim_makedisks -n 14 -t 37 -a 3'
 	vncputln ${vncaddr} 'exit'
@@ -416,15 +420,15 @@ for vmnode in $vmnode1 $vmnode2; do
 
 	vncwait ${vncaddr} "${cluster_name}::>" 1
 	vncputln ${vncaddr} "aggr create -aggregate aggr${idx}_1 -node ${nodename} -disksize 9 -diskcount 28"
-	vncputln ${vncaddr} "q"
+	vncput ${vncaddr} "q"
 	vncputln ${vncaddr} "y"
-	vncget ${vncaddr}
+	colorvncget $vncaddr
 
 	vncwait ${vncaddr} "${cluster_name}::>" 1
 	vncputln ${vncaddr} "aggr create -aggregate aggr${idx}_2 -node ${nodename} -disksize 1 -diskcount 16"
-	vncputln ${vncaddr} "q"
+	vncput ${vncaddr} "q"
 	vncputln ${vncaddr} "y"
-	vncget ${vncaddr}
+	colorvncget $vncaddr
 
 	vncwait ${vncaddr} "${cluster_name}::>" 1
 	vncputln ${vncaddr} "aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 9"
@@ -433,7 +437,8 @@ for vmnode in $vmnode1 $vmnode2; do
 
 	vncwait ${vncaddr} "${cluster_name}::>" 1
 	vncputln ${vncaddr} "vol modify -vserver ${nodename} -volume vol0 -size 4G"
-	vncget ${vncaddr}
+	vncputln ${vncaddr} "exit"
+	colorvncget $vncaddr
 
 	:; echo -e "\n\033[1;36m=> now ssh(admin@$node1_managementif_addr, admin@$node2_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...\033[0m"
 
@@ -441,15 +446,13 @@ for vmnode in $vmnode1 $vmnode2; do
 done
 
 
+#LicenseCode=SMKQROWJNQYQSDAAAAAAAAAAAAAA,YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA,MHEYKUNFXMSMUCEZFAAAAAAAAAAA,ANGJKUNFXMSMUCEZFAAAAAAAAAAA
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {Password:} {
 		send \"${password}\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"system license add -license-code SMKQROWJNQYQSDAAAAAAAAAAAAAA\\r\"
-	}
-	expect {${cluster_name}::>} {
-		send \"system license add -license-code YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA,MHEYKUNFXMSMUCEZFAAAAAAAAAAA,ANGJKUNFXMSMUCEZFAAAAAAAAAAA\\r\"
+		send \"system license add -license-code $(sed -n '/^#LicenseCode=/{s/.*=//;p}' $0)\\r\"
 	}
 
 	expect {${cluster_name}::>} {
