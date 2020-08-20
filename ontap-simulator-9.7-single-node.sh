@@ -405,7 +405,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"volume modify -vserver $VS -volume ${VS}_root -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume create -volume $VOL -aggregate $VOL_AGGR -size $VOL_SIZE -state online -unix-permissions ---rwxr-xr-x -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL_JUNCTION_PATH -policy $PolicyName\\r\"
+		send \"volume create -volume $VOL -aggregate $VOL_AGGR -size $VOL_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL_JUNCTION_PATH -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface create -vserver $VS -lif $LIF_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF_ADDR -netmask $LIF_MASK -home-node $LIF_NODE -home-port $LIF_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"

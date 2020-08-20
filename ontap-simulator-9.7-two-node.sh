@@ -535,13 +535,13 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"volume modify -vserver $VS -volume ${VS}_root -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume create -volume $VOL1 -aggregate $VOL1_AGGR -size $VOL1_SIZE -state online -unix-permissions ---rwxr-xr-x -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL1_JUNCTION_PATH -policy $PolicyName\\r\"
+		send \"volume create -volume $VOL1 -aggregate $VOL1_AGGR -size $VOL1_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL1_JUNCTION_PATH -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface create -vserver $VS -lif $LIF1_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_ADDR -netmask $LIF1_MASK -home-node $LIF1_NODE -home-port $LIF1_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume create -volume $VOL2 -aggregate $VOL2_AGGR -size $VOL2_SIZE -state online -unix-permissions ---rwxr-xr-x -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL2_JUNCTION_PATH -policy $PolicyName\\r\"
+		send \"volume create -volume $VOL2 -aggregate $VOL2_AGGR -size $VOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL2_JUNCTION_PATH -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface create -vserver $VS -lif $LIF2_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF2_ADDR -netmask $LIF2_MASK -home-node $LIF2_NODE -home-port $LIF2_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
