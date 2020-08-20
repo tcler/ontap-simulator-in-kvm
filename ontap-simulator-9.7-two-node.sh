@@ -24,7 +24,7 @@ getDefaultIp4() {
 }
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
 dns_domain_names() { sed -n '/^search */{s///; s/ /,/g; p}' /etc/resolv.conf; }
-dns_addrs() { sed -n '/^nameserver */{s///; p}' /etc/resolv.conf|tr '\n' ,; }
+dns_addrs() { sed -n '/^nameserver */{s///; p}' /etc/resolv.conf|paste -sd ,; }
 
 vncget() {
 	local _vncaddr=$1
