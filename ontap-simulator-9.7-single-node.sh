@@ -22,9 +22,18 @@ getDefaultIp4() {
 	[ -z "$nic" ] && return 1
 	getIp4 "$nic"
 }
+getDefaultIp4Mask() { ipcalc -m $(getDefaultIp4) | sed 's/.*=//'; }
+freeIpList() {
+	IFS=/ read ip netmasklen < <(getDefaultIp4)
+	IFS== read key netaddr < <(ipcalc -n $ip/$netmasklen)
+	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
+
+	echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d'
+}
+
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
 dns_domain_names() { sed -n '/^search */{s///; s/ /,/g; p}' /etc/resolv.conf; }
-dns_addrs() { sed -n '/^nameserver */{s///; p}' /etc/resolv.conf|tr '\n' ,; }
+dns_addrs() { sed -n '/^nameserver */{s///; p}' /etc/resolv.conf|paste -sd ,; }
 
 vncget() {
 	local _vncaddr=$1
@@ -347,6 +356,69 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect {${cluster_name}::>} {
 		send \"network port show\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network interface show\\r\"
+	}
+
+	expect {${cluster_name}::>} {
+		send \"exit\\r\"
+	}
+	expect eof
+"
+
+VS=vs1
+VS_AGGR=aggr1
+PolicyName=nfs_export
+VOL=vol1
+VOL_AGGR=aggr1
+VOL_SIZE=80G
+JUNCTION_PATH=/share1
+LIF_NAME=lif1
+LIF_ADDR=$(freeIpList|head -1)
+LIF_MASK=$(getDefaultIp4Mask)
+LIF_NODE=${cluster_name}-01
+LIF_PORT=e0d
+Gateway=$(getDefaultGateway)
+testIp=$(getDefaultIp4|sed 's;/.*$;;')
+#ref1: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/create.html
+#ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
+
+expect -c "spawn ssh admin@$cluster_managementif_addr
+	expect {Password:} {
+		send \"${password}\\r\"
+	}
+
+	expect {${cluster_name}::>} {
+		send \"vserver create -vserver $VS -subtype default -rootvolume vs1_root -rootvolume-security-style mixed -language C.UTF-8 -snapshot-policy default -data-services data-iscsi,data-nfs,data-cifs,data-flexcache -foreground true -aggregate $VS_AGGR\\r\"
+	}
+
+	expect {${cluster_name}::>} {
+		send \"vserver export-policy create -vserver $VS -policyname $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver export-policy rule create -vserver $VS -policyname $PolicyName -protocol nfs -clientmatch 10.0.0.0/8,192.168.10.0/24 -rorule any -rwrule "krb5,sys" -anon 65534 -allow-suid true -allow-dev true\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"volume modify -vserver $VS -volume vs1_root -policy $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"volume create -volume $VOL -aggregate $VOL_AGGR -size $VOL_SIZE -state online -unix-permissions ---rwxr-xr-x -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $JUNCTION_PATH -policy $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network interface create -vserver $VS -lif $LIF_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF_ADDR -netmask $LIF_MASK -home-node $LIF_NODE -home-port $LIF_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network route create -vserver vs1   -destination 0.0.0.0/0 -gateway $Gateway\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"dns create -domains $dns_domains -name-servers $dns_addrs -timeout 2 -attempts 1 -vserver $VS\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver nfs create -access true -v3 enabled -v4.0 disabled -tcp enabled -v4.0-acl enabled -v4.0-read-delegation enabled -v4.0-write-delegation enabled -v4-id-domain defaultv4iddomain.com -v4-grace-seconds 45 -v4-acl-preserve enabled -v4.1 enabled -rquota enabled -v4.1-acl enabled -vstorage enabled -v4-numeric-ids enabled -v4.1-read-delegation enabled -v4.1-write-delegation enabled -mount-rootonly disabled -nfs-rootonly disabled -permitted-enc-types des,des3,aes-128,aes-256 -showmount enabled -name-service-lookup-protocol udp\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver export-policy check-access -vserver $VS -volume $VOL -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface show\\r\"
