@@ -484,3 +484,86 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect eof
 "
+
+VS=vs1
+VS_AGGR=aggr1_1
+PolicyName=fs_export
+Gateway=$(getDefaultGateway)
+testIp=$(getDefaultIp4|sed 's;/.*$;;')
+
+VOL1=vol1
+VOL1_AGGR=aggr1_1
+VOL1_SIZE=90G
+VOL1_JUNCTION_PATH=/share1
+LIF1_NAME=lif1
+LIF1_ADDR=$(freeIpList|sed -n 4p)
+LIF1_MASK=$(getDefaultIp4Mask)
+LIF1_NODE=${cluster_name}-01
+LIF1_PORT=e0f
+
+VOL2=vol2
+VOL2_AGGR=aggr2_1
+VOL2_SIZE=90G
+VOL2_JUNCTION_PATH=/share2
+LIF2_NAME=lif2
+LIF2_ADDR=$(freeIpList|sed -n 5p)
+LIF2_MASK=$(getDefaultIp4Mask)
+LIF2_NODE=${cluster_name}-02
+LIF2_PORT=e0f
+
+#ref1: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/create.html
+#ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
+#ref3: https://tcler.github.io/2017/08/24/NetApp-pnfs-mds-ds-config
+
+expect -c "spawn ssh admin@$cluster_managementif_addr
+	expect {Password:} {
+		send \"${password}\\r\"
+	}
+
+	expect {${cluster_name}::>} {
+		send \"vserver create -vserver $VS -subtype default -rootvolume ${VS}_root -rootvolume-security-style mixed -language C.UTF-8 -snapshot-policy default -data-services data-iscsi,data-nfs,data-cifs,data-flexcache -foreground true -aggregate $VS_AGGR\\r\"
+		expect {Vserver creation completed} {send_user {Vserver creation completed}}
+	}
+
+	expect {${cluster_name}::>} {
+		send \"vserver export-policy create -vserver $VS -policyname $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver export-policy rule create -vserver $VS -policyname $PolicyName -protocol cifs,nfs,nfs3,nfs4,flexcache -clientmatch 10.0.0.0/8,192.168.10.0/24 -rorule any -rwrule krb5,sys,ntlm -anon 65534 -allow-suid true -allow-dev true\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"volume modify -vserver $VS -volume ${VS}_root -policy $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"volume create -volume $VOL1 -aggregate $VOL1_AGGR -size $VOL1_SIZE -state online -unix-permissions ---rwxr-xr-x -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL1_JUNCTION_PATH -policy $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network interface create -vserver $VS -lif $LIF1_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_ADDR -netmask $LIF1_MASK -home-node $LIF1_NODE -home-port $LIF1_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"volume create -volume $VOL2 -aggregate $VOL2_AGGR -size $VOL2_SIZE -state online -unix-permissions ---rwxr-xr-x -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL2_JUNCTION_PATH -policy $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network interface create -vserver $VS -lif $LIF2_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF2_ADDR -netmask $LIF2_MASK -home-node $LIF2_NODE -home-port $LIF2_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network route create -vserver $VS  -destination 0.0.0.0/0 -gateway $Gateway\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"dns create -domains $dns_domains -name-servers $dns_addrs -timeout 2 -attempts 1 -vserver $VS\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver nfs create -access true -v3 enabled -v4.0 disabled -tcp enabled -v4.0-acl enabled -v4.0-read-delegation enabled -v4.0-write-delegation enabled -v4-id-domain defaultv4iddomain.com -v4-grace-seconds 45 -v4-acl-preserve enabled -v4.1 enabled -rquota enabled -v4.1-acl enabled -vstorage enabled -v4-numeric-ids enabled -v4.1-read-delegation enabled -v4.1-write-delegation enabled -mount-rootonly disabled -nfs-rootonly disabled -permitted-enc-types des,des3,aes-128,aes-256 -showmount enabled -name-service-lookup-protocol udp\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver export-policy check-access -vserver $VS -volume $VOL1 -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network interface show\\r\"
+	}
+
+	expect {${cluster_name}::>} {
+		send \"exit\\r\"
+	}
+	expect eof
+"
