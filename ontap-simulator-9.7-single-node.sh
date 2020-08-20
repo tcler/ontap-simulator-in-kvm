@@ -23,6 +23,8 @@ getDefaultIp4() {
 	getIp4 "$nic"
 }
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
+dns_domain_names() { sed -n '/^search */{s///; s/ /,/g; p}' /etc/resolv.conf; }
+dns_addrs() { sed -n '/^nameserver */{s///; p}' /etc/resolv.conf|tr '\n' ,; }
 
 vncget() {
 	local _vncaddr=$1
@@ -112,8 +114,8 @@ cluster_managementif_port=e0a
 cluster_managementif_addr=192.168.10.11
 cluster_managementif_mask=255.255.255.0
 cluster_managementif_gateway=192.168.10.1
-dns_domain=192.168.10.1
-dns_addr=192.168.10.1
+dns_domains=$(dns_domain_names)
+dns_addrs=$(dns_addrs)
 controller_located=raycom
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
@@ -217,10 +219,10 @@ vncwait ${vncaddr} "Enter the cluster management interface default gateway" 2
 vncputln ${vncaddr} "$cluster_managementif_gateway"
 
 vncwait ${vncaddr} "Enter the DNS domain names" 2
-vncputln ${vncaddr} "$dns_domain"
+vncputln ${vncaddr} "$dns_domains"
 
 vncwait ${vncaddr} "Enter the name server .. addresses" 2
-vncputln ${vncaddr} "$dns_addr"
+vncputln ${vncaddr} "$dns_addrs"
 
 vncwait ${vncaddr} "where is the controller located" 2
 vncputln ${vncaddr} "$controller_located"
