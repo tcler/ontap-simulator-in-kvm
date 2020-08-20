@@ -390,7 +390,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 
 	expect {${cluster_name}::>} {
-		send \"vserver create -vserver $VS -subtype default -rootvolume vs1_root -rootvolume-security-style mixed -language C.UTF-8 -snapshot-policy default -data-services data-iscsi,data-nfs,data-cifs,data-flexcache -foreground true -aggregate $VS_AGGR\\r\"
+		send \"vserver create -vserver $VS -subtype default -rootvolume ${VS}_root -rootvolume-security-style mixed -language C.UTF-8 -snapshot-policy default -data-services data-iscsi,data-nfs,data-cifs,data-flexcache -foreground true -aggregate $VS_AGGR\\r\"
 	}
 
 	expect {${cluster_name}::>} {
@@ -400,7 +400,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"vserver export-policy rule create -vserver $VS -policyname $PolicyName -protocol cifs,nfs,nfs3,nfs4,flexcache -clientmatch 10.0.0.0/8,192.168.10.0/24 -rorule any -rwrule krb5,sys,ntlm -anon 65534 -allow-suid true -allow-dev true\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume modify -vserver $VS -volume vs1_root -policy $PolicyName\\r\"
+		send \"volume modify -vserver $VS -volume ${VS}_root -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"volume create -volume $VOL -aggregate $VOL_AGGR -size $VOL_SIZE -state online -unix-permissions ---rwxr-xr-x -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $JUNCTION_PATH -policy $PolicyName\\r\"
@@ -409,7 +409,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"network interface create -vserver $VS -lif $LIF_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF_ADDR -netmask $LIF_MASK -home-node $LIF_NODE -home-port $LIF_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"network route create -vserver vs1   -destination 0.0.0.0/0 -gateway $Gateway\\r\"
+		send \"network route create -vserver $VS  -destination 0.0.0.0/0 -gateway $Gateway\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"dns create -domains $dns_domains -name-servers $dns_addrs -timeout 2 -attempts 1 -vserver $VS\\r\"
