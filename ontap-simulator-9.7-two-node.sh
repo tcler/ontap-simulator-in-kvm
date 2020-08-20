@@ -22,6 +22,15 @@ getDefaultIp4() {
 	[ -z "$nic" ] && return 1
 	getIp4 "$nic"
 }
+getDefaultIp4Mask() { ipcalc -m $(getDefaultIp4) | sed 's/.*=//'; }
+freeIpList() {
+	IFS=/ read ip netmasklen < <(getDefaultIp4)
+	IFS== read key netaddr < <(ipcalc -n $ip/$netmasklen)
+	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
+
+	echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d'
+}
+
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
 dns_domain_names() { sed -n '/^search */{s///; s/ /,/g; p}' /etc/resolv.conf; }
 dns_addrs() { sed -n '/^nameserver */{s///; p}' /etc/resolv.conf|paste -sd ,; }
