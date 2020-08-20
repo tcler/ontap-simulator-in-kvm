@@ -375,7 +375,7 @@ testIp=$(getDefaultIp4|sed 's;/.*$;;')
 
 VOL=vol1
 VOL_AGGR=aggr1
-VOL_SIZE=100G
+VOL_SIZE=90G
 VOL_JUNCTION_PATH=/share1
 LIF_NAME=lif1
 LIF_ADDR=$(freeIpList|head -1)
