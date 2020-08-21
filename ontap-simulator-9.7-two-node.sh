@@ -493,7 +493,7 @@ testIp=$(getDefaultIp4|sed 's;/.*$;;')
 
 VOL1=vol1
 VOL1_AGGR=aggr1_1
-VOL1_SIZE=90G
+VOL1_SIZE=120G
 VOL1_JUNCTION_PATH=/share1
 LIF1_NAME=lif1
 LIF1_ADDR=$(freeIpList|sed -n 4p)
@@ -503,7 +503,7 @@ LIF1_PORT=e0f
 
 VOL2=vol2
 VOL2_AGGR=aggr2_1
-VOL2_SIZE=90G
+VOL2_SIZE=120G
 VOL2_JUNCTION_PATH=/share2
 LIF2_NAME=lif2
 LIF2_ADDR=$(freeIpList|sed -n 5p)
@@ -529,7 +529,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"vserver export-policy create -vserver $VS -policyname $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"vserver export-policy rule create -vserver $VS -policyname $PolicyName -protocol cifs,nfs,nfs3,nfs4,flexcache -clientmatch 10.0.0.0/8,192.168.10.0/24 -rorule any -rwrule krb5,sys,ntlm -anon 65534 -allow-suid true -allow-dev true\\r\"
+		send \"vserver export-policy rule create -vserver $VS -policyname $PolicyName -protocol cifs,nfs,nfs3,nfs4,flexcache -clientmatch 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16 -rorule any -rwrule krb5,sys,ntlm -anon 65534 -allow-suid true -allow-dev true\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"volume modify -vserver $VS -volume ${VS}_root -policy $PolicyName\\r\"
@@ -557,6 +557,9 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect {${cluster_name}::>} {
 		send \"vserver export-policy check-access -vserver $VS -volume $VOL1 -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver export-policy check-access -vserver $VS -volume $VOL2 -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface show\\r\"

@@ -375,7 +375,7 @@ testIp=$(getDefaultIp4|sed 's;/.*$;;')
 
 VOL=vol1
 VOL_AGGR=aggr1
-VOL_SIZE=90G
+VOL_SIZE=120G
 VOL_JUNCTION_PATH=/share1
 LIF_NAME=lif1
 LIF_ADDR=$(freeIpList|head -1)
@@ -399,7 +399,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"vserver export-policy create -vserver $VS -policyname $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"vserver export-policy rule create -vserver $VS -policyname $PolicyName -protocol cifs,nfs,nfs3,nfs4,flexcache -clientmatch 10.0.0.0/8,192.168.10.0/24 -rorule any -rwrule krb5,sys,ntlm -anon 65534 -allow-suid true -allow-dev true\\r\"
+		send \"vserver export-policy rule create -vserver $VS -policyname $PolicyName -protocol cifs,nfs,nfs3,nfs4,flexcache -clientmatch 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16 -rorule any -rwrule krb5,sys,ntlm -anon 65534 -allow-suid true -allow-dev true\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"volume modify -vserver $VS -volume ${VS}_root -policy $PolicyName\\r\"
