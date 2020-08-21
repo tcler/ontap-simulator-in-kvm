@@ -373,15 +373,21 @@ PolicyName=fs_export
 Gateway=$(getDefaultGateway)
 testIp=$(getDefaultIp4|sed 's;/.*$;;')
 
-VOL=vol1
-VOL_AGGR=aggr1
-VOL_SIZE=120G
-VOL_JUNCTION_PATH=/share1
 LIF_NAME=lif1
 LIF_ADDR=$(freeIpList|head -1)
 LIF_MASK=$(getDefaultIp4Mask)
 LIF_NODE=${cluster_name}-01
 LIF_PORT=e0d
+
+VOL1=vol1
+VOL1_AGGR=aggr1
+VOL1_SIZE=80G
+VOL1_JUNCTION_PATH=/share1
+
+VOL2=vol2
+VOL2_AGGR=aggr1
+VOL2_SIZE=80G
+VOL2_JUNCTION_PATH=/share2
 
 #ref1: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/create.html
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
@@ -406,7 +412,10 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"volume modify -vserver $VS -volume ${VS}_root -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume create -volume $VOL -aggregate $VOL_AGGR -size $VOL_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL_JUNCTION_PATH -policy $PolicyName\\r\"
+		send \"volume create -volume $VOL1 -aggregate $VOL1_AGGR -size $VOL1_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL1_JUNCTION_PATH -policy $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"volume create -volume $VOL2 -aggregate $VOL2_AGGR -size $VOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL2_JUNCTION_PATH -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface create -vserver $VS -lif $LIF_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF_ADDR -netmask $LIF_MASK -home-node $LIF_NODE -home-port $LIF_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
@@ -421,7 +430,10 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"vserver nfs create -access true -v3 enabled -v4.0 disabled -tcp enabled -v4.0-acl enabled -v4.0-read-delegation enabled -v4.0-write-delegation enabled -v4-id-domain defaultv4iddomain.com -v4-grace-seconds 45 -v4-acl-preserve enabled -v4.1 enabled -rquota enabled -v4.1-acl enabled -vstorage enabled -v4-numeric-ids enabled -v4.1-read-delegation enabled -v4.1-write-delegation enabled -mount-rootonly disabled -nfs-rootonly disabled -permitted-enc-types des,des3,aes-128,aes-256 -showmount enabled -name-service-lookup-protocol udp\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"vserver export-policy check-access -vserver $VS -volume $VOL -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
+		send \"vserver export-policy check-access -vserver $VS -volume $VOL1 -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver export-policy check-access -vserver $VS -volume $VOL2 -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface show\\r\"
