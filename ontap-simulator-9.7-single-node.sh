@@ -393,6 +393,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 
 	expect {${cluster_name}::>} {
 		send \"vserver create -vserver $VS -subtype default -rootvolume ${VS}_root -rootvolume-security-style mixed -language C.UTF-8 -snapshot-policy default -data-services data-iscsi,data-nfs,data-cifs,data-flexcache -foreground true -aggregate $VS_AGGR\\r\"
+		expect {Vserver creation completed} {send_user {Vserver creation completed}}
 	}
 
 	expect {${cluster_name}::>} {
