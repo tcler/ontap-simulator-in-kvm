@@ -9,14 +9,7 @@ Fedora-32, Fedora-33
 #1. kiss-vm
 git clone https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns; sudo vm --prepare
 
-#2. vncdotool
-sudo yum install -y python-devel
-pip install vncdotool
-
-#3. gocr
-sudo yum install -y gocr
-
-#*4. if you are non-root user, open new terminal and continue
+#*2. if you are non-root user, open new terminal and continue
 ```
 
 ### download ONTAP simulator image and license file, and convert image file to qcow2
@@ -29,9 +22,9 @@ for i in {1..4}; do qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-di
 
 ### run the automation script
 ```
-bash ontap-simulator-9.7-single-node.sh   #deploy a single node ontap cluster
+git clone https://github.com/tcler/ontap-simulator-in-kvm
 
+bash ontap-simulator-in-kvm/ontap-simulator-9.7-single-node.sh  #deploy a single node ontap cluster
 #or
-
-bash ontap-simulator-9.7-two-node.sh      #deploy a two node ontap cluster
+bash ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh     #deploy a two node ontap cluster
 ```
