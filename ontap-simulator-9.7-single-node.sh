@@ -26,6 +26,7 @@ getDefaultIp4Mask() { ipcalc -m $(getDefaultIp4) | sed 's/.*=//'; }
 freeIpList() {
 	IFS=/ read ip netmasklen < <(getDefaultIp4)
 	IFS== read key netaddr < <(ipcalc -n $ip/$netmasklen)
+	which nmap &>/dev/null || yum install -y nmap >/dev/null
 	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
 
 	echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d'
