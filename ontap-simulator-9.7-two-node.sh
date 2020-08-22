@@ -139,7 +139,7 @@ cluster_managementif_mask=255.255.255.0
 cluster_managementif_gateway=192.168.20.1
 dns_domains=$(dns_domain_names)
 dns_addrs=$(dns_addrs)
-controller_located=raycom
+read controller_located _ < <(hostname -A)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> [$vmnode1] start ...\033[0m"
