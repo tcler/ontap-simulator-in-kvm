@@ -496,21 +496,31 @@ VOL1=vol1
 VOL1_AGGR=aggr1_1
 VOL1_SIZE=120G
 VOL1_JUNCTION_PATH=/share1
-LIF1_NAME=lif1
-LIF1_ADDR=$(freeIpList|sed -n 4p)
-LIF1_MASK=$(getDefaultIp4Mask)
-LIF1_NODE=${cluster_name}-01
-LIF1_PORT=e0f
+LIF1_0_NAME=lif1.0
+LIF1_0_ADDR=192.168.20.21
+LIF1_0_MASK=255.255.255.0
+LIF1_0_NODE=${cluster_name}-01
+LIF1_0_PORT=e0e
+LIF1_1_NAME=lif1.1
+LIF1_1_ADDR=$(freeIpList|sed -n 4p)
+LIF1_1_MASK=$(getDefaultIp4Mask)
+LIF1_1_NODE=${cluster_name}-01
+LIF1_1_PORT=e0f
 
 VOL2=vol2
 VOL2_AGGR=aggr2_1
 VOL2_SIZE=120G
 VOL2_JUNCTION_PATH=/share2
-LIF2_NAME=lif2
-LIF2_ADDR=$(freeIpList|sed -n 5p)
-LIF2_MASK=$(getDefaultIp4Mask)
-LIF2_NODE=${cluster_name}-02
-LIF2_PORT=e0f
+LIF2_0_NAME=lif2.0
+LIF2_0_ADDR=192.168.20.22
+LIF2_0_MASK=255.255.255.0
+LIF2_0_NODE=${cluster_name}-02
+LIF2_0_PORT=e0e
+LIF2_1_NAME=lif2.1
+LIF2_1_ADDR=$(freeIpList|sed -n 5p)
+LIF2_1_MASK=$(getDefaultIp4Mask)
+LIF2_1_NODE=${cluster_name}-02
+LIF2_1_PORT=e0f
 
 #ref1: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/create.html
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
@@ -539,13 +549,19 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"volume create -volume $VOL1 -aggregate $VOL1_AGGR -size $VOL1_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL1_JUNCTION_PATH -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"network interface create -vserver $VS -lif $LIF1_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_ADDR -netmask $LIF1_MASK -home-node $LIF1_NODE -home-port $LIF1_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
+		send \"network interface create -vserver $VS -lif $LIF1_0_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_0_ADDR -netmask $LIF1_0_MASK -home-node $LIF1_0_NODE -home-port $LIF1_0_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network interface create -vserver $VS -lif $LIF1_1_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_1_ADDR -netmask $LIF1_1_MASK -home-node $LIF1_1_NODE -home-port $LIF1_1_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"volume create -volume $VOL2 -aggregate $VOL2_AGGR -size $VOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL2_JUNCTION_PATH -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"network interface create -vserver $VS -lif $LIF2_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF2_ADDR -netmask $LIF2_MASK -home-node $LIF2_NODE -home-port $LIF2_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
+		send \"network interface create -vserver $VS -lif $LIF2_0_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF2_0_ADDR -netmask $LIF2_0_MASK -home-node $LIF2_0_NODE -home-port $LIF2_0_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network interface create -vserver $VS -lif $LIF2_1_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF2_1_ADDR -netmask $LIF2_1_MASK -home-node $LIF2_1_NODE -home-port $LIF2_1_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network route create -vserver $VS  -destination 0.0.0.0/0 -gateway $Gateway\\r\"

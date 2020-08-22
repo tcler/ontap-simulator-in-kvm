@@ -117,7 +117,7 @@ password=fsqe2020
 
 vmnode=ontap-single
 node_managementif_port=e0c
-node_managementif_addr=
+node_managementif_addr=10.66.12.108
 node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0a
@@ -374,11 +374,17 @@ PolicyName=fs_export
 Gateway=$(getDefaultGateway)
 testIp=$(getDefaultIp4|sed 's;/.*$;;')
 
-LIF_NAME=lif1
-LIF_ADDR=$(freeIpList|head -1)
-LIF_MASK=$(getDefaultIp4Mask)
-LIF_NODE=${cluster_name}-01
-LIF_PORT=e0d
+LIF1_0_NAME=lif1.0
+LIF1_0_ADDR=192.168.10.21
+LIF1_0_MASK=255.255.255.0
+LIF1_0_NODE=${cluster_name}-01
+LIF1_0_PORT=e0b
+
+LIF1_1_NAME=lif1.1
+LIF1_1_ADDR=$(freeIpList|head -1)
+LIF1_1_MASK=$(getDefaultIp4Mask)
+LIF1_1_NODE=${cluster_name}-01
+LIF1_1_PORT=e0d
 
 VOL1=vol1
 VOL1_AGGR=aggr1
@@ -419,7 +425,10 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"volume create -volume $VOL2 -aggregate $VOL2_AGGR -size $VOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL2_JUNCTION_PATH -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"network interface create -vserver $VS -lif $LIF_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF_ADDR -netmask $LIF_MASK -home-node $LIF_NODE -home-port $LIF_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
+		send \"network interface create -vserver $VS -lif $LIF1_0_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_0_ADDR -netmask $LIF1_0_MASK -home-node $LIF1_0_NODE -home-port $LIF1_0_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"network interface create -vserver $VS -lif $LIF1_1_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_1_ADDR -netmask $LIF1_1_MASK -home-node $LIF1_1_NODE -home-port $LIF1_1_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network route create -vserver $VS  -destination 0.0.0.0/0 -gateway $Gateway\\r\"
