@@ -248,7 +248,7 @@ colorvncget $vncaddr
 :; echo -e "\n\033[1;36m=> now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...\033[0m"
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=> Delete snapshots ...\033[0m"
+:; echo -e "\033[1;30m=> Delete snapshots and add disk shelf ...\033[0m"
 
 vncwait ${vncaddr} "^login:" 1
 
@@ -322,6 +322,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
 	after 1000
 	expect {${cluster_name}::>} { send \"vol modify -vserver ${nodename} -volume vol0 -size 4G\\r\" }
+
 	expect {${cluster_name}::>} { send \"system license add -license-code $(sed -n '/^#LicenseCode=/{s/.*=//;p}' $0)\\r\" }
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
 	expect {${cluster_name}::>} { send \"vol show\\r\" }
