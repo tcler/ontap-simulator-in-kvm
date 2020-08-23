@@ -309,10 +309,12 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {${cluster_name}::>} {
 		send \"aggr create -aggregate aggr1 -node ${nodename} -disksize 9 -diskcount 28\\r\"
 		send \"y\\r\"
+		expect {Job succeeded: DONE} {}
 	}
 	expect {${cluster_name}::>} {
 		send \"aggr create -aggregate aggr2 -node ${nodename} -disksize 1 -diskcount 16\\r\"
 		send \"y\\r\"
+		expect {Job succeeded: DONE} {}
 	}
 	expect {${cluster_name}::>} {
 		send \"aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 9\\r\"
