@@ -117,7 +117,7 @@ password=fsqe2020
 
 vmnode=ontap-single
 node_managementif_port=e0c
-node_managementif_addr=10.66.12.108
+node_managementif_addr= #10.66.12.108
 node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0a
@@ -249,61 +249,47 @@ colorvncget $vncaddr
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> Delete snapshots ...\033[0m"
+
 vncwait ${vncaddr} "^login:" 1
-vncputln ${vncaddr} "admin"
-vncputln ${vncaddr} "${password}"
 
 nodename=${cluster_name}-01
-vncwait ${vncaddr} "${cluster_name}::>" 1
-vncputln ${vncaddr} "run -node ${nodename}"
-vncwait ${vncaddr} "${nodename}>" 1
-vncputln ${vncaddr} "snap delete -a -f vol0"
-vncputln ${vncaddr} "snap sched vol0 0 0 0"
-vncputln ${vncaddr} "snap autodelete vol0 on"
-vncputln ${vncaddr} "snap autodelete vol0 target_free_space 35"
-vncputln ${vncaddr} "snap autodelete vol0"
-vncputln ${vncaddr} "exit"
-
-:; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=> Unlock user diag and set password ...\033[0m"
 diagpasswd=d1234567
-vncwait ${vncaddr} "${cluster_name}::>" 1
-vncputln ${vncaddr} "security login unlock -username diag"
-vncputln ${vncaddr} "security login password -username diag"
-vncwait ${vncaddr} "Enter a new password:" 1
-vncputln ${vncaddr} "${diagpasswd}"
-vncwait ${vncaddr} "Enter it again:" 1
-vncputln ${vncaddr} "${diagpasswd}"
+expect -c "spawn ssh admin@$cluster_managementif_addr
+	expect {Password:} { send \"${password}\\r\" }
+	expect {${cluster_name}::>} { send \"run -node ${nodename}\\r\" }
+	expect {${nodename}>} { send \"snap delete -a -f vol0\\r\" }
+	expect {${nodename}>} { send \"snap sched vol0 0 0 0\\r\" }
+	expect {${nodename}>} { send \"snap autodelete vol0 on\\r\" }
+	expect {${nodename}>} { send \"snap autodelete vol0 target_free_space\\r\" }
+	expect {${nodename}>} { send \"snap autodelete vol0\\r\" }
+	expect {${nodename}>} { send \"exit\\r\" }
 
-:; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=> Add disks and create aggregate ...\033[0m"
-vncputln ${vncaddr} "set -privilege diag"
-vncwait ${vncaddr} "Do you want to continue? {y|n}:" 1
-vncputln ${vncaddr} "y"
-vncwait ${vncaddr} "${cluster_name}::.>" 1
-vncputln ${vncaddr} "systemshell -node ${nodename}"
-vncwait ${vncaddr} "diag@127.0.0.1's password:" 1
-vncputln ${vncaddr} "${diagpasswd}"
+	expect {${cluster_name}::>} { send \"security login unlock -username diag\\r\" }
+	expect {${cluster_name}::>} { send \"security login password -username diag\\r\" }
+	expect {Enter a new password:} { send \"$diagpasswd\\r\" }
+	expect {Enter it again:} { send \"$diagpasswd\\r\" }
 
-vncwait ${vncaddr} "${nodename}%" 1
-vncputln ${vncaddr} 'setenv PATH "${PATH}:/usr/sbin"'
-vncputln ${vncaddr} 'echo $PATH'
-vncputln ${vncaddr} 'cd /sim/dev'
-vncputln ${vncaddr} 'ls ,disks/'
-colorvncget $vncaddr
-vncputln ${vncaddr} 'vsim_makedisks -h'
-colorvncget $vncaddr
-vncputln ${vncaddr} 'sudo vsim_makedisks -n 14 -t 37 -a 2'
-vncputln ${vncaddr} 'sudo vsim_makedisks -n 14 -t 37 -a 3'
-vncputln ${vncaddr} 'exit'
-vncwait ${vncaddr} "${cluster_name}::.>" 1
-vncputln ${vncaddr} "system node reboot -node ${nodename}"
-vncwait ${vncaddr} "Are you sure you want to reboot node" 1
-vncputln ${vncaddr} "y"
+	expect {${cluster_name}::>} { send \"\\r\" }
+	expect {${cluster_name}::>} { send \"set -privilege diag\\r\" }
+	expect {Do you want to continue? {y|n}:} { send \"y\\r\" }
+	expect {${cluster_name}::*>} { send \"systemshell -node ${nodename}\\r\" }
+	expect {diag@127.0.0.1's password:} { send \"${diagpasswd}\\r\" }
+
+	expect {${nodename}%} { send {setenv PATH \"\${PATH}:/usr/sbin\"}; send \"\\r\" }
+	expect {${nodename}%} { send \"echo \\\$PATH\\r\" }
+	expect {${nodename}%} { send \"cd /sim/dev\\r\" }
+	expect {${nodename}%} { send \"ls ,disks/\\r\" }
+	expect {${nodename}%} { send \"vsim_makedisks -h\\r\" }
+	expect {${nodename}%} { send \"sudo vsim_makedisks -n 14 -t 37 -a 2\\r\" }
+	expect {${nodename}%} { send \"sudo vsim_makedisks -n 14 -t 37 -a 3\\r\" }
+	expect {${nodename}%} { send \"exit\\r\" }
+	expect {${cluster_name}::*>} { send \"system node reboot -node ${nodename}\\r\" }
+	expect {Are you sure you want to reboot node} { send \"y\\r\"}
+	expect eof
+"
 
 vncwait ${vncaddr} "Hit [Enter] to boot immediately" 0.5
 vncputln ${vncaddr}
-
 vncwait ${vncaddr} "^login:" 1
 vncputln ${vncaddr} "admin"
 vncputln ${vncaddr} "${password}"
@@ -313,58 +299,35 @@ while true; do
 	vncget ${vncaddr} | grep "$nodename  *true" && break
 	sleep 5
 done
-vncputln ${vncaddr} "disk assign -all true -node ${nodename}"
-
-vncwait ${vncaddr} "${cluster_name}::>" 1
-vncputln ${vncaddr} "aggr create -aggregate aggr1 -node ${nodename} -disksize 9 -diskcount 28"
-vncput ${vncaddr} "q"
-vncputln ${vncaddr} "y"
-colorvncget $vncaddr
-
-vncwait ${vncaddr} "${cluster_name}::>" 1
-vncputln ${vncaddr} "aggr create -aggregate aggr2 -node ${nodename} -disksize 1 -diskcount 16"
-vncput ${vncaddr} "q"
-vncputln ${vncaddr} "y"
-colorvncget $vncaddr
-
-vncwait ${vncaddr} "${cluster_name}::>" 1
-vncputln ${vncaddr} "aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 9"
-vncputln ${vncaddr} "y"
-vncputln ${vncaddr} "y"
-
-vncwait ${vncaddr} "${cluster_name}::>" 1
-vncputln ${vncaddr} "vol modify -vserver ${nodename} -volume vol0 -size 4G"
 vncputln ${vncaddr} "exit"
-colorvncget $vncaddr
-
-
-:; echo -e "\n\033[1;36m=> now ssh(admin@$node_managementif_addr and admin@$cluster_managementif_addr) is available,\n please complete other configurations in ssh session ...\033[0m"
 
 #LicenseCode=SMKQROWJNQYQSDAAAAAAAAAAAAAA,YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA
 expect -c "spawn ssh admin@$cluster_managementif_addr
-	expect {Password:} {
-		send \"${password}\\r\"
+	expect {Password:} { send \"${password}\\r\" }
+	expect {${cluster_name}::>} { send \"disk assign -all true -node ${nodename}\\r\" }
+	after 1000
+	expect {${cluster_name}::>} {
+		send \"aggr create -aggregate aggr1 -node ${nodename} -disksize 9 -diskcount 28\\r\"
+		send \"y\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"system license add -license-code $(sed -n '/^#LicenseCode=/{s/.*=//;p}' $0)\\r\"
-	}
-
-	expect {${cluster_name}::>} {
-		send \"aggr show\\r\"
+		send \"aggr create -aggregate aggr2 -node ${nodename} -disksize 1 -diskcount 16\\r\"
+		send \"y\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"vol show\\r\"
+		send \"aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 9\\r\"
+		send \"y\\r\"
+		send \"y\\r\"
 	}
-	expect {${cluster_name}::>} {
-		send \"network port show\\r\"
-	}
-	expect {${cluster_name}::>} {
-		send \"network interface show\\r\"
-	}
-
-	expect {${cluster_name}::>} {
-		send \"exit\\r\"
-	}
+	expect {${cluster_name}::>} { send \"aggr show\\r\" }
+	after 1000
+	expect {${cluster_name}::>} { send \"vol modify -vserver ${nodename} -volume vol0 -size 4G\\r\" }
+	expect {${cluster_name}::>} { send \"system license add -license-code $(sed -n '/^#LicenseCode=/{s/.*=//;p}' $0)\\r\" }
+	expect {${cluster_name}::>} { send \"aggr show\\r\" }
+	expect {${cluster_name}::>} { send \"vol show\\r\" }
+	expect {${cluster_name}::>} { send \"network port show\\r\" }
+	expect {${cluster_name}::>} { send \"network interface show\\r\" }
+	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
 "
 
