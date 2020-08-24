@@ -165,7 +165,7 @@ vncwait ${vncaddr} "^login:" 5
 [[ -z "$node1_managementif_addr" ]] &&
 	node1_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node1_managementif_addr" ]] &&
-	node1_managementif_addr=$(freeIpList|tail -1)
+	node1_managementif_addr=$(freeIpList|sort -R|tail -1)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
@@ -299,7 +299,7 @@ vncwait ${vncaddr} "^login:" 5
 [[ -z "$node2_managementif_addr" ]] &&
 	node2_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node2_managementif_addr" ]] &&
-	node2_managementif_addr=$(freeIpList|tail -2|head -1)
+	node2_managementif_addr=$(freeIpList|sort -R|tail -1)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
@@ -476,7 +476,7 @@ LIF1_0_MASK=255.255.255.0
 LIF1_0_NODE=${cluster_name}-01
 LIF1_0_PORT=e0e
 LIF1_1_NAME=lif1.1
-LIF1_1_ADDR=$(freeIpList|sed -n 4p)
+LIF1_1_ADDR=$(freeIpList|sort -R|head -1)
 LIF1_1_MASK=$(getDefaultIp4Mask)
 LIF1_1_NODE=${cluster_name}-01
 LIF1_1_PORT=e0f
@@ -491,7 +491,7 @@ LIF2_0_MASK=255.255.255.0
 LIF2_0_NODE=${cluster_name}-02
 LIF2_0_PORT=e0e
 LIF2_1_NAME=lif2.1
-LIF2_1_ADDR=$(freeIpList|sed -n 5p)
+LIF2_1_ADDR=$(freeIpList|sort -R|head -1)
 LIF2_1_MASK=$(getDefaultIp4Mask)
 LIF2_1_NODE=${cluster_name}-02
 LIF2_1_PORT=e0f

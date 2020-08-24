@@ -155,7 +155,7 @@ vncwait ${vncaddr} "^login:" 5
 [[ -z "$node_managementif_addr" ]] &&
 	node_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node_managementif_addr" ]] &&
-	node_managementif_addr=$(freeIpList|tail -1)
+	node_managementif_addr=$(freeIpList|sort -R|tail -1)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
@@ -349,7 +349,7 @@ LIF1_0_NODE=${cluster_name}-01
 LIF1_0_PORT=e0b
 
 LIF1_1_NAME=lif1.1
-LIF1_1_ADDR=$(freeIpList|head -1)
+LIF1_1_ADDR=$(freeIpList|sort -R|head -1)
 LIF1_1_MASK=$(getDefaultIp4Mask)
 LIF1_1_NODE=${cluster_name}-01
 LIF1_1_PORT=e0d
