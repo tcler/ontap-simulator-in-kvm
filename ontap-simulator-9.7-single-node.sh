@@ -154,6 +154,8 @@ vncputln ${vncaddr}
 vncwait ${vncaddr} "^login:" 5
 [[ -z "$node_managementif_addr" ]] &&
 	node_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
+[[ -z "$node_managementif_addr" ]] &&
+	node_managementif_addr=$(freeIpList|tail -1)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 

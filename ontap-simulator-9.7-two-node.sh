@@ -164,6 +164,8 @@ vncputln ${vncaddr}
 vncwait ${vncaddr} "^login:" 5
 [[ -z "$node1_managementif_addr" ]] &&
 	node1_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
+[[ -z "$node1_managementif_addr" ]] &&
+	node1_managementif_addr=$(freeIpList|tail -1)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
@@ -296,6 +298,8 @@ vncputln ${vncaddr} "boot"
 vncwait ${vncaddr} "^login:" 5
 [[ -z "$node2_managementif_addr" ]] &&
 	node2_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
+[[ -z "$node2_managementif_addr" ]] &&
+	node2_managementif_addr=$(freeIpList|tail -2|head -1)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
