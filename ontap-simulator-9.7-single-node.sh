@@ -19,6 +19,7 @@
 #     | RHEL-N in |                       | RHEL-N in |
 #     | KVM       |                       | bare-metal|
 #     +-----------+                       +-----------+
+#     e.g: vm rhel-8.3% -net=ontap-data
 #
 
 rundir=/tmp/ontap-simulator-s-$$
@@ -164,15 +165,15 @@ read controller_located _ < <(hostname -A)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> creating network ...\033[0m"
-netin=ontap-single
-vm netcreate netname=$netin brname=br-ontap subnet=10
-vm net | grep -w $netin >/dev/null || vm netstart $netin
+netdata=ontap-data
+vm netcreate netname=$netdata brname=br-ontap subnet=10
+vm net | grep -w $netdata >/dev/null || vm netstart $netdata
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> node vm start ...\033[0m"
 vm -n $vmnode ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
-	--net=$netin,e1000  --net=$netin,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
+	--net=$netdata,e1000  --net=$netdata,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
 	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2
 
 read vncaddr <<<"$(vm vnc $vmnode)"
