@@ -1,6 +1,26 @@
 #!/bin/bash
 #configure ontap simulator 9.7 as single cluster
 
+#
+#     /-> 192.168.10.0/24       /-> switch that your host connected to. e.g: 10.X.Y.0/23
+#     +---------------------+   +---------------------+
+#     | hostonly vnet       |   | physical switch     |
+#     +---------------------+   +---------------------+
+#        ^           ^   ^        ^   ^            ^
+#        |           |   |        |   |            |
+#        |         +--------------------+          |
+#        |         |e0a e0b      e0c e0d|          |
+#        |         |        ontap       |          |
+#        |         |        NODE        |          |
+#        |         +--------------------+          |
+# ---------------------------------------------------------------
+#        |                                         |
+#     +-----------+                       +-----------+
+#     | RHEL-N in |                       | RHEL-N in |
+#     | KVM       |                       | bare-metal|
+#     +-----------+                       +-----------+
+#
+
 rundir=/tmp/ontap-simulator-s-$$
 mkdir -p $rundir
 clean() { rm -rf $rundir; }
