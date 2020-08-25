@@ -68,11 +68,24 @@ getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
 dns_domain_names() { sed -n '/^search */{s///; s/ /,/g; p}' /etc/resolv.conf; }
 dns_addrs() { sed -n '/^nameserver */{s///; p}' /etc/resolv.conf|paste -sd ,; }
 
+ConvertCmd="gm convert"
+if ! which gm &>/dev/null; then
+	if ! which convert &>/dev/null; then
+		echo "{WARN} command gm or convert are needed" >&2
+		exit 1
+	else
+		ConvertCmd=convert
+	fi
+fi
+if ! which gocr &>/dev/null; then
+	echo "{WARN} command gocr is needed" >&2
+	exit 1
+fi
 vncget() {
 	local _vncaddr=$1
 	[[ -z "$_vncaddr" ]] && return 1
 	vncdo -s ${_vncaddr} capture $rundir/_screen.png
-	convert $rundir/_screen.png  -threshold 30%  $rundir/_screen2.png
+	$ConvertCmd $rundir/_screen.png  -threshold 30%  $rundir/_screen2.png
 	gocr -i $rundir/_screen2.png 2>/dev/null
 }
 colorvncget() { vncget "$@" | GREP_COLORS='ms=01;30;47' grep --color .; }
