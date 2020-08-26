@@ -4,7 +4,7 @@
 #
 #     /-> 192.168.10.0/24       /-> switch that your host connected to. e.g: 10.X.Y.0/23
 #     +---------------------+   +---------------------+
-#     | hostonly vnet       |   | physical switch     |
+#     | vnet: ontap-data    |   | physical switch     |
 #     +---------------------+   +---------------------+
 #        ^           ^   ^        ^   ^            ^
 #        |           |   |        |   |            |
