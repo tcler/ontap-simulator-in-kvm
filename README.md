@@ -1,8 +1,8 @@
 # ontap-simulator-in-kvm
 show how to install and configure ONTAP simulator in KVM automatically
 
-### verified host OS
-Fedora-32, Fedora-33
+### verified host OS list
+Fedora-32, Fedora-33, RHEL-8.2.0, RHEL-8.3.0, RHEL-7.8, RHEL-7.9
 
 ### dependent packages install
 ```
