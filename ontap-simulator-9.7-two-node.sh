@@ -546,6 +546,7 @@ LIF2_1_PORT=e0f
 #ref3: https://tcler.github.io/2017/08/24/NetApp-pnfs-mds-ds-config
 
 expect -c "spawn ssh admin@$cluster_managementif_addr
+	set timeout 120
 	expect {Password:} {
 		send \"${password}\\r\"
 	}

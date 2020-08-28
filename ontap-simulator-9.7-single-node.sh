@@ -403,6 +403,7 @@ VOL2_JUNCTION_PATH=/share2
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
 
 expect -c "spawn ssh admin@$cluster_managementif_addr
+	set timeout 120
 	expect {Password:} {
 		send \"${password}\\r\"
 	}
