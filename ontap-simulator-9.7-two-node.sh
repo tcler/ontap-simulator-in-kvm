@@ -419,7 +419,6 @@ for vmnode in $vmnode1 $vmnode2; do
 	diagpasswd=d1234567
 	expect -c "spawn ssh admin@$cluster_managementif_addr
 		expect {Password:} { send \"${password}\\r\" }
-		expect {${cluster_name}::>} { send \"cluster date modify -timezone $(date '+%Z -dateandtime %m%d%H%M.%S')\\r\" }
 		expect {${cluster_name}::>} { send \"run -node ${nodename}\\r\" }
 		expect {${nodename}>} { send \"snap delete -a -f vol0\\r\" }
 		expect {${nodename}>} { send \"snap sched vol0 0 0 0\\r\" }
@@ -606,5 +605,14 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {${cluster_name}::>} {
 		send \"exit\\r\"
 	}
+	expect eof
+"
+
+expect -c "spawn ssh admin@$cluster_managementif_addr
+	set timeout 120
+	expect {Password:} { send \"${password}\\r\" }
+	expect {${cluster_name}::>} { send \"cluster date modify -timezone $(date +%Z)\\r\" }
+	expect {${cluster_name}::>} { send \"cluster date modify -date \\\"$(date '+%m/%d/%Y %H:%M:%S')\\\"\\r\" }
+	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
 "
