@@ -8,7 +8,7 @@ Fedora-32, Fedora-33, RHEL-8.2.0, RHEL-8.3.0, RHEL-7.8, RHEL-7.9
 ```
 #1. kiss-vm
 git config http.postBuffer 524288000   #avoid git clone fail
-git clone https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns; sudo vm --prepare
+git clone --depth=1 https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns; sudo vm --prepare
 
 #*2. if you are non-root user, open new terminal and continue
 ```
