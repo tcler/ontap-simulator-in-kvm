@@ -451,6 +451,10 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface show\\r\"
+		expect {
+		{'q' to quit...} { send \"q\\r\" }
+		{${cluster_name}::>} { send \"\\r\" }
+		}
 	}
 
 	expect {${cluster_name}::>} {
