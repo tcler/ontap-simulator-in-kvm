@@ -188,7 +188,7 @@ read controller_located _ < <(hostname -A)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> [$vmnode1] start ...\033[0m"
-vm -n $vmnode1 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
+vm -n $vmnode1 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --disable-guest-hypv \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netcluster,e1000 --net=$netcluster,e1000 \
 	--net-macvtap=-,e1000 \
@@ -316,7 +316,7 @@ node2_managementif_gateway=$(getDefaultGateway)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> [$vmnode2] start ...\033[0m"
-vm -n $vmnode2 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
+vm -n $vmnode2 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --disable-guest-hypv \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netcluster,e1000 --net=$netcluster,e1000 \
 	--net-macvtap=-,e1000 \
