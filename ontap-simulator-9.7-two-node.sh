@@ -33,6 +33,43 @@
 #                  +----------------------+
 #
 
+# command line parse
+P=${0##*/}
+Usage() {
+	cat <<-EOF
+	Usage:
+	  $P [OPTIONs]
+
+	Options:
+	  -h, --help                          #Display this help.
+	  --dnsaddrs <ip[,ip2]>               #e.g: 192.168.10.1 or 192.168.1.1,192.168.2.1
+	  --dnsdomains <domain1[,domain2]>    #e.g: test.a.com or test.a.com,devel.a.com
+	  --node1-pubaddr <ip>                #node1 management address for public access
+	  --node2-pubaddr <ip>                #node2 management address for public access
+	EOF
+}
+
+_at=`getopt -o h \
+	--long help \
+	--long dnsaddrs: \
+	--long dnsdomains: \
+	--long node1-pubaddr: \
+    -a -n "$0" -- "$@"`
+[[ $? != 0 ]] && { exit 1; }
+eval set -- "$_at"
+while true; do
+	case "$1" in
+	-h|--help) Usage; shift 1; exit 0;;
+	--dnsaddrs)       DNS_ADDRS=$2; shift 2;;
+	--dnsdomains)     DNS_DOMAINS=$2; shift 2;;
+	--node1-pubaddr)   node1_managementif_addr=$2; shift 2;;
+	--node2-pubaddr)   node2_managementif_addr=$2; shift 2;;
+	--) shift; break;;
+	esac
+done
+
+
+#__main__
 rundir=/tmp/ontap-simulator-t-$$
 mkdir -p $rundir
 clean() { rm -rf $rundir; }
@@ -175,7 +212,7 @@ password=fsqe2020
 #node1
 vmnode1=ontap-node1
 node1_managementif_port=e0c
-node1_managementif_addr= #10.66.12.176
+node1_managementif_addr=$node1_managementif_addr #10.66.12.176
 node1_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node1_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0d
@@ -183,7 +220,9 @@ cluster_managementif_addr=192.168.20.11
 cluster_managementif_mask=255.255.255.0
 cluster_managementif_gateway=192.168.20.1
 dns_domains=$(dns_domain_names)
+[[ -n "$DNS_DOMAINS" ]] && dns_domains=${DNS_DOMAINS},${dns_domains}
 dns_addrs=$(dns_addrs)
+[[ -n "$DNS_ADDRS" ]] && dns_addrs=${DNS_ADDRS},${dns_addrs}
 read controller_located _ < <(hostname -A)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
@@ -310,7 +349,7 @@ colorvncget $vncaddr
 #node2
 vmnode2=ontap-node2
 node2_managementif_port=e0c
-node2_managementif_addr= #10.66.12.160
+node2_managementif_addr=$node2_managementif_addr #10.66.12.160
 node2_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node2_managementif_gateway=$(getDefaultGateway)
 

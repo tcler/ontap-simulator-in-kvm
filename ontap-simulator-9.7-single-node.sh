@@ -22,6 +22,41 @@
 #     e.g: vm rhel-8.3% -net=ontap-data
 #
 
+# command line parse
+P=${0##*/}
+Usage() {
+	cat <<-EOF
+	Usage:
+	  $P [OPTIONs]
+
+	Options:
+	  -h, --help                          #Display this help.
+	  --dnsaddrs <ip[,ip2]>               #e.g: 192.168.10.1 or 192.168.1.1,192.168.2.1
+	  --dnsdomains <domain1[,domain2]>    #e.g: test.a.com or test.a.com,devel.a.com
+	  --node-pubaddr <ip>                 #node management address for public access
+	EOF
+}
+
+_at=`getopt -o h \
+	--long help \
+	--long dnsaddrs: \
+	--long dnsdomains: \
+	--long node-pubaddr: \
+    -a -n "$0" -- "$@"`
+[[ $? != 0 ]] && { exit 1; }
+eval set -- "$_at"
+while true; do
+	case "$1" in
+	-h|--help) Usage; shift 1; exit 0;;
+	--dnsaddrs)       DNS_ADDRS=$2; shift 2;;
+	--dnsdomains)     DNS_DOMAINS=$2; shift 2;;
+	--node-pubaddr)   node_managementif_addr=$2; shift 2;;
+	--) shift; break;;
+	esac
+done
+
+
+# __main__
 rundir=/tmp/ontap-simulator-s-$$
 mkdir -p $rundir
 clean() { rm -rf $rundir; }
@@ -152,7 +187,7 @@ password=fsqe2020
 
 vmnode=ontap-single
 node_managementif_port=e0c
-node_managementif_addr= #10.66.12.108
+node_managementif_addr=$node_managementif_addr #10.66.12.108
 node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0a
@@ -160,7 +195,9 @@ cluster_managementif_addr=192.168.10.11
 cluster_managementif_mask=255.255.255.0
 cluster_managementif_gateway=192.168.10.1
 dns_domains=$(dns_domain_names)
+[[ -n "$DNS_DOMAINS" ]] && dns_domains=${DNS_DOMAINS},${dns_domains}
 dns_addrs=$(dns_addrs)
+[[ -n "$DNS_ADDRS" ]] && dns_addrs=${DNS_ADDRS},${dns_addrs}
 read controller_located _ < <(hostname -A)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
