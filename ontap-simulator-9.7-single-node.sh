@@ -34,6 +34,8 @@ Usage() {
 	  --dnsaddrs <ip[,ip2]>               #e.g: 192.168.10.1 or 192.168.1.1,192.168.2.1
 	  --dnsdomains <domain1[,domain2]>    #e.g: test.a.com or test.a.com,devel.a.com
 	  --node-pubaddr <ip>                 #node management address for public access
+	  --cifs-user <user>                  #cifs/samba user name
+	  --cifs-passwd <passwd>              #cifs/samba password
 	EOF
 }
 
@@ -42,6 +44,8 @@ _at=`getopt -o h \
 	--long dnsaddrs: \
 	--long dnsdomains: \
 	--long node-pubaddr: \
+	--long cifs-user: \
+	--long cifs-passwd: \
     -a -n "$0" -- "$@"`
 [[ $? != 0 ]] && { exit 1; }
 eval set -- "$_at"
@@ -51,6 +55,8 @@ while true; do
 	--dnsaddrs)       DNS_ADDRS=$2; shift 2;;
 	--dnsdomains)     DNS_DOMAINS=$2; shift 2;;
 	--node-pubaddr)   node_managementif_addr=$2; shift 2;;
+	--cifs-user)      CIFS_USER=$2; shift 2;;
+	--cifs-passwd)    CIFS_PASSWD=$2; shift 2;;
 	--) shift; break;;
 	esac
 done
