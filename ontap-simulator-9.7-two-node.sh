@@ -41,21 +41,23 @@ Usage() {
 	  $P [OPTIONs]
 
 	Options:
-	  -h, --help                          #Display this help.
-	  --dnsaddrs <ip[,ip2]>               #e.g: 192.168.10.1 or 192.168.1.1,192.168.2.1
-	  --dnsdomains <domain1[,domain2]>    #e.g: test.a.com or test.a.com,devel.a.com
-	  --node1-pubaddr <ip>                #node1 management address for public access
-	  --node2-pubaddr <ip>                #node2 management address for public access
-	  --lif1-pubaddr <ip>                 #default lif1.1 address for public access
-	  --lif2-pubaddr <ip>                 #default lif2.1 address for public access
-	  --cifs-server-name <NetBIOS>        #CIFS Server NetBIOS Name
-	  --cifs-workgroup <NetBIOS>          #Workgroup Name, This parameter specifies the name of the workgroup (up to 15 characters).
-	  --cifs-ad-domain <FQDN>             #Fully Qualified Domain Name, This parameter specifies the name of the Active Directory domain to associate with the CIFS server.
-	  --cifs-ad-admin <user>              #Active Directory admin user name
-	  --cifs-ad-passwd <passwd>           #Active Directory admin password
-	  --ntp-server <addr>                 #ntp server address
+	  -h, --help                         #Display this help.
+	  --dnsaddrs <ip[,ip2]>              #e.g: 192.168.10.1 or 192.168.1.1,192.168.2.1
+	  --dnsdomains <domain1[,domain2]>   #e.g: test.a.com or test.a.com,devel.a.com
+	  --node1-pubaddr <ip>               #node1 management address for public access
+	  --node2-pubaddr <ip>               #node2 management address for public access
+	  --lif1-pubaddr <ip>                #default lif1.1 address for public access
+	  --lif2-pubaddr <ip>                #default lif2.1 address for public access
+	  --cifs-server-name <NetBIOS>       #CIFS Server NetBIOS Name
+	  --cifs-workgroup <NetBIOS>         #Workgroup Name, This parameter specifies the name of the workgroup (up to 15 characters).
+	  --ad-domain <FQDN>                 #Fully Qualified Domain Name, This parameter specifies the name of the Active Directory domain to associate with the CIFS server.
+	  --ad-admin <user>                  #Active Directory admin user name
+	  --ad-passwd <passwd>               #Active Directory admin password
+	  --ntp-server <addr>                #ntp server address
 	EOF
 }
+
+#cifs option: https://docs.netapp.com/ontap-9/index.jsp?topic=%2Fcom.netapp.doc.dot-cm-cmpr-910%2Fvserver__cifs__create.html
 
 _at=`getopt -o h \
 	--long help \
@@ -67,9 +69,9 @@ _at=`getopt -o h \
 	--long lif2-pubaddr: \
 	--long cifs-server-name: \
 	--long cifs-workgroup: \
-	--long cifs-ad-domain: \
-	--long cifs-ad-admin: \
-	--long cifs-ad-passwd: \
+	--long ad-domain: --long cifs-ad-domain: \
+	--long ad-admin: --long cifs-ad-admin: \
+	--long ad-passwd: --long cifs-ad-passwd: \
 	--long ntp-server: \
     -a -n "$0" -- "$@"`
 [[ $? != 0 ]] && { exit 1; }
@@ -85,9 +87,9 @@ while true; do
 	--lif2-pubaddr)   LIF2_1_ADDR=$2; shift 2;;
 	--cifs-server-name) CIFS_SERVER_NAME=$2; shift 2;;
 	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
-	--cifs-ad-domain) CIFS_AD_DOMAIN=$2; shift 2;;
-	--cifs-ad-admin)  CIFS_AD_ADMIN=$2; shift 2;;
-	--cifs-ad-passwd) CIFS_AD_PASSWD=$2; shift 2;;
+	--ad-domain|--cifs-ad-domain) AD_DOMAIN=$2; shift 2;;
+	--ad-admin|--cifs-ad-admin)   AD_ADMIN=$2; shift 2;;
+	--ad-passwd|--cifs-ad-passwd) AD_PASSWD=$2; shift 2;;
 	--ntp-server)     NTP_SERVER=$2; shift 2;;
 	--) shift; break;;
 	esac
@@ -611,10 +613,10 @@ CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 LOCAL_USER=root
 LOCAL_USER_PASSWD=Sesame~0pen
 cifsOption="-workgroup $CIFS_WORKGROUP"
-CIFS_AD_DOMAIN=${CIFS_AD_DOMAIN}
-[[ -n "$CIFS_AD_DOMAIN" ]] && cifsOption="-domain $CIFS_AD_DOMAIN"
-CIFS_AD_ADMIN=${CIFS_AD_ADMIN:-administrator}
-CIFS_AD_PASSWD=${CIFS_AD_PASSWD:-fsqe2015!}
+AD_DOMAIN=${AD_DOMAIN}
+[[ -n "$AD_DOMAIN" ]] && cifsOption="-domain $AD_DOMAIN"
+AD_ADMIN=${AD_ADMIN:-administrator}
+AD_PASSWD=${AD_PASSWD:-fsqe2015!}
 CIFSVOL1=cifsvol1
 CIFSVOL1_AGGR=aggr1_1
 CIFSVOL1_SIZE=60G
@@ -696,8 +698,8 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"cifs create -vserver $VS -cifs-server $CIFS_SERVER_NAME $cifsOption\\r\"
 		expect {
 			{Enter the user name:} {
-				send \"${CIFS_AD_ADMIN}\\r\"
-				expect {Enter the password:} { send \"${CIFS_AD_PASSWD}\\r\" }
+				send \"${AD_ADMIN}\\r\"
+				expect {Enter the password:} { send \"${AD_PASSWD}\\r\" }
 			}
 			{${cluster_name}::>} {
 				send \"vserver cifs users-and-groups local-user create -vserver $VS -user-name $CIFS_SERVER_NAME\\\\${LOCAL_USER} -full-name ${LOCAL_USER}\\r\"
@@ -752,10 +754,10 @@ cifs_delete() {
 			send \"vserver cifs delete -vserver $VS\\r\"
 		}
 		expect {Enter the user name:} {
-			send \"${CIFS_AD_ADMIN}\\r\"
+			send \"${AD_ADMIN}\\r\"
 		}
 		expect {Enter the password:} {
-			send \"${CIFS_AD_PASSWD}\\r\"
+			send \"${AD_PASSWD}\\r\"
 		}
 		expect {shares? {y|n}:} {
 		send \"y\\r\"
