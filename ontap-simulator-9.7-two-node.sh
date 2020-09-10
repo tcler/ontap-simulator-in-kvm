@@ -700,7 +700,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 				expect {Enter the password:} { send \"${CIFS_AD_PASSWD}\\r\" }
 			}
 			{${cluster_name}::>} {
-				send \"vserver cifs users-and-groups local-user create -vserver $VS -user-name $CIFS_SERVER_NAME\\${LOCAL_USER} -full-name ${LOCAL_USER}\\r\"
+				send \"vserver cifs users-and-groups local-user create -vserver $VS -user-name $CIFS_SERVER_NAME\\\\${LOCAL_USER} -full-name ${LOCAL_USER}\\r\"
 				expect {Enter the password:} { send \"${LOCAL_USER_PASSWD}\\r\" }
 				expect {Confirm the password:} { send \"${LOCAL_USER_PASSWD}\\r\" }
 			}
