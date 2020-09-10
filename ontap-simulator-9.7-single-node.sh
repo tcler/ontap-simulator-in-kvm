@@ -589,18 +589,15 @@ cifs_delete() {
 	expect -c "spawn ssh admin@$cluster_managementif_addr
 		set timeout 120
 		expect {Password:} { send \"${password}\\r\" }
-		expect {${cluster_name}::>} {
-			send \"vserver cifs delete -vserver $VS\\r\"
+		expect {${cluster_name}::>} { send \"vserver cifs delete -vserver $VS\\r\" }
+		expect {
+			{Enter the user name:} {
+				send \"${AD_ADMIN}\\r\"
+				expect {Enter the password:} { send \"${AD_PASSWD}\\r\" }
+			}
+			{Warning: There are one or more shares} {}
 		}
-		expect {Enter the user name:} {
-			send \"${AD_ADMIN}\\r\"
-		}
-		expect {Enter the password:} {
-			send \"${AD_PASSWD}\\r\"
-		}
-		expect {shares? {y|n}:} {
-		send \"y\\r\"
-		}
+		expect \"Do you really want to delete * shares? {y|n}:\" { send \"y\\r\" }
 		expect {${cluster_name}::>} {
 			send \"exit\\r\"
 		}
