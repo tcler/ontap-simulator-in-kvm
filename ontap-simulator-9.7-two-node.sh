@@ -580,6 +580,20 @@ LIF2_1_MASK=$(getDefaultIp4Mask)
 LIF2_1_NODE=${cluster_name}-02
 LIF2_1_PORT=e0f
 
+SERVERNAME=netapp-cifs
+CIFSVOL1=cifsvol1
+CIFSVOL1_AGGR=aggr1_1
+CIFSVOL1_SIZE=60G
+CIFSVOL1_PATH=/cifs1
+SHARENAME=cifs1
+
+CIFSVOL2=cifsvol2
+CIFSVOL2_AGGR=aggr2_1
+CIFSVOL2_SIZE=60G
+CIFSVOL2_PATH=/cifs2
+SHARENAME2=cifs2
+CIFS_USER=${CIFS_USER:-administrator}
+CIFS_PASSWD=${CIFS_PASSWD:-fsqe2015!}
 #ref1: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/create.html
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
 #ref3: https://tcler.github.io/2017/08/24/NetApp-pnfs-mds-ds-config
@@ -638,6 +652,34 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"vserver export-policy check-access -vserver $VS -volume $VOL2 -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
 	}
 	expect {${cluster_name}::>} {
+		send \"volume create -volume $CIFSVOL1 -aggregate $CIFSVOL1_AGGR -size $CIFSVOL1_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -vserver $VS -junction-path $CIFSVOL1_PATH -policy $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"volume create -volume $CIFSVOL2 -aggregate $CIFSVOL2_AGGR -size $CIFSVOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW  -vserver $VS -junction-path $CIFSVOL2_PATH -policy $PolicyName\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"ntp server create -server $DNS_ADDRS\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"cifs create -vserver $VS -cifs-server $SERVERNAME -domain $DNS_DOMAINS\\r\"
+	}
+	expect {Enter the user name:} {
+		send \"${CIFS_USER}\\r\"
+	}
+	expect {Enter the password:} {
+		send \"${CIFS_PASSWD}\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver cifs share create -share-name $SHARENAME -vserver $VS -path $CIFSVOL1_PATH\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver cifs share create -share-name $SHARENAME2 -vserver $VS -path $CIFSVOL2_PATH\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"cifs share show -vserver $VS\\r\"
+	}
+
+	expect {${cluster_name}::>} {
 		send \"network interface show\\r\"
 		expect {
 		{'q' to quit...} { send \"q\\r\" }
@@ -659,3 +701,26 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
 "
+
+cifs_delete() {
+	expect -c "spawn ssh admin@$cluster_managementif_addr
+		set timeout 120
+		expect {Password:} { send \"${password}\\r\" }
+		expect {${cluster_name}::>} {
+			send \"vserver cifs delete -vserver $VS\\r\"
+		}
+		expect {Enter the user name:} {
+			send \"${CIFS_USER}\\r\"
+		}
+		expect {Enter the password:} {
+			send \"${CIFS_PASSWD}\\r\"
+		}
+		expect {shares? {y|n}:} {
+		send \"y\\r\"
+		}
+		expect {${cluster_name}::>} {
+			send \"exit\\r\"
+		}
+		expect eof
+	"
+}
