@@ -609,6 +609,8 @@ LIF2_1_PORT=e0f
 CIFS_SERVER_NAME=${CIFS_SERVER_NAME:-netapp-cifs}
 CIFS_AD_DOMAIN=${CIFS_AD_DOMAIN}
 CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
+LOCAL_USER=root
+LOCAL_USER_PASSWD=Sesame~0pen
 cifsOption="-workgroup $CIFS_WORKGROUP"
 [[ -n "$CIFS_AD_DOMAIN" ]] && cifsOption="-domain $CIFS_AD_DOMAIN"
 CIFS_AD_ADMIN=${CIFS_AD_ADMIN:-administrator}
@@ -697,7 +699,11 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 				send \"${CIFS_AD_ADMIN}\\r\"
 				expect {Enter the password:} { send \"${CIFS_AD_PASSWD}\\r\" }
 			}
-			{${cluster_name}::>} { send \"\\r\" }
+			{${cluster_name}::>} {
+				send \"vserver cifs users-and-groups local-user create -vserver $VS -user-name $CIFS_SERVER_NAME\\${LOCAL_USER} -full-name ${LOCAL_USER}\\r\"
+				expect {Enter the password:} { send \"${LOCAL_USER_PASSWD}\\r\" }
+				expect {Confirm the password:} { send \"${LOCAL_USER_PASSWD}\\r\" }
+			}
 		}
 	}
 	expect {${cluster_name}::>} {
