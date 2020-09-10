@@ -449,7 +449,8 @@ VOL2_AGGR=aggr1
 VOL2_SIZE=60G
 VOL2_JUNCTION_PATH=/share2
 
-SERVERNAME=netapp-cifs
+CIFS_SERVER_NAME=${CIFS_SERVER_NAME:-netapp-cifs}
+CIFS_SERVER_DOMAIN=${CIFS_SERVER_DOMAIN:-${dns_domains%%,*}}
 CIFSVOL1=cifsvol1
 CIFSVOL1_AGGR=aggr1
 CIFSVOL1_SIZE=30G
@@ -523,7 +524,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"ntp server create -server $NTP_SERVER\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"cifs create -vserver $VS -cifs-server $SERVERNAME -domain $DNS_DOMAINS\\r\"
+		send \"cifs create -vserver $VS -cifs-server $CIFS_SERVER_NAME -domain $CIFS_SERVER_DOMAIN\\r\"
 	}
 	expect {Enter the user name:} {
 		send \"${CIFS_USER}\\r\"
