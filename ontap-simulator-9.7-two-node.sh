@@ -50,6 +50,9 @@ Usage() {
 	  --lif2-pubaddr <ip>                 #default lif2.1 address for public access
 	  --cifs-user <user>                  #cifs/samba user name
 	  --cifs-passwd <passwd>              #cifs/samba password
+	  --cifs-server-name <NetBIOS>        #CIFS Server NetBIOS Name
+	  --cifs-workgroup <NetBIOS>          #Workgroup Name, This parameter specifies the name of the workgroup (up to 15 characters).
+	  --cifs-ad-domain <FQDN>             #Fully Qualified Domain Name, This parameter specifies the name of the Active Directory domain to associate with the CIFS server.
 	  --ntp-server <addr>                 #ntp server address
 	EOF
 }
@@ -64,6 +67,9 @@ _at=`getopt -o h \
 	--long lif2-pubaddr: \
 	--long cifs-user: \
 	--long cifs-passwd: \
+	--long cifs-server-name: \
+	--long cifs-workgroup: \
+	--long cifs-ad-domain: \
 	--long ntp-server: \
     -a -n "$0" -- "$@"`
 [[ $? != 0 ]] && { exit 1; }
@@ -79,6 +85,9 @@ while true; do
 	--lif2-pubaddr)   LIF2_1_ADDR=$2; shift 2;;
 	--cifs-user)      CIFS_USER=$2; shift 2;;
 	--cifs-passwd)    CIFS_PASSWD=$2; shift 2;;
+	--cifs-server-name) CIFS_SERVER_NAME=$2; shift 2;;
+	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
+	--cifs-ad-domain) CIFS_AD_DOMAIN=$2; shift 2;;
 	--ntp-server)     NTP_SERVER=$2; shift 2;;
 	--) shift; break;;
 	esac
@@ -598,7 +607,10 @@ LIF2_1_NODE=${cluster_name}-02
 LIF2_1_PORT=e0f
 
 CIFS_SERVER_NAME=${CIFS_SERVER_NAME:-netapp-cifs}
-CIFS_SERVER_DOMAIN=${CIFS_SERVER_DOMAIN:-${dns_domains%%,*}}
+CIFS_AD_DOMAIN=${CIFS_AD_DOMAIN}
+CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
+cifsOption="-workgroup $CIFS_WORKGROUP"
+[[ -n "$CIFS_AD_DOMAIN" ]] && cifsOption="-domain $CIFS_AD_DOMAIN"
 CIFSVOL1=cifsvol1
 CIFSVOL1_AGGR=aggr1_1
 CIFSVOL1_SIZE=60G
@@ -679,7 +691,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"ntp server create -server $NTP_SERVER\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"cifs create -vserver $VS -cifs-server $CIFS_SERVER_NAME -domain $CIFS_SERVER_DOMAIN\\r\"
+		send \"cifs create -vserver $VS -cifs-server $CIFS_SERVER_NAME $cifsOption\\r\"
 	}
 	expect {Enter the user name:} {
 		send \"${CIFS_USER}\\r\"
