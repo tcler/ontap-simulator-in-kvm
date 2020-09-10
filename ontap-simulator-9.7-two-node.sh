@@ -48,11 +48,11 @@ Usage() {
 	  --node2-pubaddr <ip>                #node2 management address for public access
 	  --lif1-pubaddr <ip>                 #default lif1.1 address for public access
 	  --lif2-pubaddr <ip>                 #default lif2.1 address for public access
-	  --cifs-user <user>                  #cifs/samba user name
-	  --cifs-passwd <passwd>              #cifs/samba password
 	  --cifs-server-name <NetBIOS>        #CIFS Server NetBIOS Name
 	  --cifs-workgroup <NetBIOS>          #Workgroup Name, This parameter specifies the name of the workgroup (up to 15 characters).
 	  --cifs-ad-domain <FQDN>             #Fully Qualified Domain Name, This parameter specifies the name of the Active Directory domain to associate with the CIFS server.
+	  --cifs-ad-admin <user>              #Active Directory admin user name
+	  --cifs-ad-passwd <passwd>           #Active Directory admin password
 	  --ntp-server <addr>                 #ntp server address
 	EOF
 }
@@ -65,11 +65,11 @@ _at=`getopt -o h \
 	--long node2-pubaddr: \
 	--long lif1-pubaddr: \
 	--long lif2-pubaddr: \
-	--long cifs-user: \
-	--long cifs-passwd: \
 	--long cifs-server-name: \
 	--long cifs-workgroup: \
 	--long cifs-ad-domain: \
+	--long cifs-ad-admin: \
+	--long cifs-ad-passwd: \
 	--long ntp-server: \
     -a -n "$0" -- "$@"`
 [[ $? != 0 ]] && { exit 1; }
@@ -83,11 +83,11 @@ while true; do
 	--node2-pubaddr)  node2_managementif_addr=$2; shift 2;;
 	--lif1-pubaddr)   LIF1_1_ADDR=$2; shift 2;;
 	--lif2-pubaddr)   LIF2_1_ADDR=$2; shift 2;;
-	--cifs-user)      CIFS_USER=$2; shift 2;;
-	--cifs-passwd)    CIFS_PASSWD=$2; shift 2;;
 	--cifs-server-name) CIFS_SERVER_NAME=$2; shift 2;;
 	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
 	--cifs-ad-domain) CIFS_AD_DOMAIN=$2; shift 2;;
+	--cifs-ad-admin)  CIFS_AD_ADMIN=$2; shift 2;;
+	--cifs-ad-passwd) CIFS_AD_PASSWD=$2; shift 2;;
 	--ntp-server)     NTP_SERVER=$2; shift 2;;
 	--) shift; break;;
 	esac
@@ -611,6 +611,8 @@ CIFS_AD_DOMAIN=${CIFS_AD_DOMAIN}
 CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 cifsOption="-workgroup $CIFS_WORKGROUP"
 [[ -n "$CIFS_AD_DOMAIN" ]] && cifsOption="-domain $CIFS_AD_DOMAIN"
+CIFS_AD_ADMIN=${CIFS_AD_ADMIN:-administrator}
+CIFS_AD_PASSWD=${CIFS_AD_PASSWD:-fsqe2015!}
 CIFSVOL1=cifsvol1
 CIFSVOL1_AGGR=aggr1_1
 CIFSVOL1_SIZE=60G
@@ -622,8 +624,6 @@ CIFSVOL2_AGGR=aggr2_1
 CIFSVOL2_SIZE=60G
 CIFSVOL2_PATH=/cifs2
 SHARENAME2=cifs2
-CIFS_USER=${CIFS_USER:-administrator}
-CIFS_PASSWD=${CIFS_PASSWD:-fsqe2015!}
 #ref1: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/create.html
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
 #ref3: https://tcler.github.io/2017/08/24/NetApp-pnfs-mds-ds-config
@@ -692,12 +692,13 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect {${cluster_name}::>} {
 		send \"cifs create -vserver $VS -cifs-server $CIFS_SERVER_NAME $cifsOption\\r\"
-	}
-	expect {Enter the user name:} {
-		send \"${CIFS_USER}\\r\"
-	}
-	expect {Enter the password:} {
-		send \"${CIFS_PASSWD}\\r\"
+		expect {
+			{Enter the user name:} {
+				send \"${CIFS_AD_ADMIN}\\r\"
+				expect {Enter the password:} { send \"${CIFS_AD_PASSWD}\\r\" }
+			}
+			{${cluster_name}::>} { send \"\\r\" }
+		}
 	}
 	expect {${cluster_name}::>} {
 		send \"vserver cifs share create -share-name $SHARENAME -vserver $VS -path $CIFSVOL1_PATH\\r\"
@@ -740,10 +741,10 @@ cifs_delete() {
 			send \"vserver cifs delete -vserver $VS\\r\"
 		}
 		expect {Enter the user name:} {
-			send \"${CIFS_USER}\\r\"
+			send \"${CIFS_AD_ADMIN}\\r\"
 		}
 		expect {Enter the password:} {
-			send \"${CIFS_PASSWD}\\r\"
+			send \"${CIFS_AD_PASSWD}\\r\"
 		}
 		expect {shares? {y|n}:} {
 		send \"y\\r\"
