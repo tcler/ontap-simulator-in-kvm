@@ -703,6 +703,11 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 				send \"vserver cifs users-and-groups local-user create -vserver $VS -user-name $CIFS_SERVER_NAME\\\\${LOCAL_USER} -full-name ${LOCAL_USER}\\r\"
 				expect {Enter the password:} { send \"${LOCAL_USER_PASSWD}\\r\" }
 				expect {Confirm the password:} { send \"${LOCAL_USER_PASSWD}\\r\" }
+				expect {${cluster_name}::>} { send \"set diag\\r\" }
+				expect {Do you want to continue? {y|n}:} { send \"y\\r\" }
+				expect {${cluster_name}::*>} { send \"vserver cifs options modify -vserver $VS -is-local-auth-enabled true\\r\" }
+				expect {${cluster_name}::*>} { send \"vserver cifs options modify -vserver $VS -is-local-users-and-groups-enabled true\\r\" }
+				expect {${cluster_name}::*>} { send \"set admin\\r\" }
 			}
 		}
 	}
