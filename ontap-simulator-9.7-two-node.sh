@@ -48,6 +48,7 @@ Usage() {
 	  --node2-pubaddr <ip>                #node2 management address for public access
 	  --cifs-user <user>                  #cifs/samba user name
 	  --cifs-passwd <passwd>              #cifs/samba password
+	  --ntp-server <addr>                 #ntp server address
 	EOF
 }
 
@@ -58,6 +59,7 @@ _at=`getopt -o h \
 	--long node1-pubaddr: \
 	--long cifs-user: \
 	--long cifs-passwd: \
+	--long ntp-server: \
     -a -n "$0" -- "$@"`
 [[ $? != 0 ]] && { exit 1; }
 eval set -- "$_at"
@@ -70,6 +72,7 @@ while true; do
 	--node2-pubaddr)  node2_managementif_addr=$2; shift 2;;
 	--cifs-user)      CIFS_USER=$2; shift 2;;
 	--cifs-passwd)    CIFS_PASSWD=$2; shift 2;;
+	--ntp-server)     NTP_SERVER=$2; shift 2;;
 	--) shift; break;;
 	esac
 done
@@ -213,6 +216,7 @@ vm net | grep -w $netdata >/dev/null || vm netstart $netdata
 #cluster
 cluster_name=fsqe-2nc1
 password=fsqe2020
+NTP_SERVER=${NTP_SERVER:-192.168.20.1}
 
 #===============================================================================
 #node1
@@ -664,7 +668,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"volume create -volume $CIFSVOL2 -aggregate $CIFSVOL2_AGGR -size $CIFSVOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW  -vserver $VS -junction-path $CIFSVOL2_PATH -policy $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"ntp server create -server $DNS_ADDRS\\r\"
+		send \"ntp server create -server $NTP_SERVER\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"cifs create -vserver $VS -cifs-server $SERVERNAME -domain $DNS_DOMAINS\\r\"
