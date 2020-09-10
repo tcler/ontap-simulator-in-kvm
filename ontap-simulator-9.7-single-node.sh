@@ -34,6 +34,7 @@ Usage() {
 	  --dnsaddrs <ip[,ip2]>               #e.g: 192.168.10.1 or 192.168.1.1,192.168.2.1
 	  --dnsdomains <domain1[,domain2]>    #e.g: test.a.com or test.a.com,devel.a.com
 	  --node-pubaddr <ip>                 #node management address for public access
+	  --lif-pubaddr <ip>                  #default lif1.1 address for public access
 	  --cifs-user <user>                  #cifs/samba user name
 	  --cifs-passwd <passwd>              #cifs/samba password
 	  --ntp-server <addr>                 #ntp server address
@@ -45,6 +46,7 @@ _at=`getopt -o h \
 	--long dnsaddrs: \
 	--long dnsdomains: \
 	--long node-pubaddr: \
+	--long lif-pubaddr: \
 	--long cifs-user: \
 	--long cifs-passwd: \
 	--long ntp-server: \
@@ -57,6 +59,7 @@ while true; do
 	--dnsaddrs)       DNS_ADDRS=$2; shift 2;;
 	--dnsdomains)     DNS_DOMAINS=$2; shift 2;;
 	--node-pubaddr)   node_managementif_addr=$2; shift 2;;
+	--lif-pubaddr)    LIF1_1_ADDR=$2; shift 2;;
 	--cifs-user)      CIFS_USER=$2; shift 2;;
 	--cifs-passwd)    CIFS_PASSWD=$2; shift 2;;
 	--ntp-server)     NTP_SERVER=$2; shift 2;;
@@ -431,7 +434,7 @@ LIF1_0_NODE=${cluster_name}-01
 LIF1_0_PORT=e0b
 
 LIF1_1_NAME=lif1.1
-LIF1_1_ADDR=$(freeIpList|sort -R|head -1)
+[[ -z "$LIF1_1_ADDR" ]] && LIF1_1_ADDR=$(freeIpList|sort -R|head -1)
 LIF1_1_MASK=$(getDefaultIp4Mask)
 LIF1_1_NODE=${cluster_name}-01
 LIF1_1_PORT=e0d
