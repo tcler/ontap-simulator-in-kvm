@@ -460,7 +460,10 @@ VOL2_AGGR=aggr1
 VOL2_SIZE=60G
 VOL2_JUNCTION_PATH=/share2
 
-CIFS_SERVER_NAME=${CIFS_SERVER_NAME:-netapp-cifs}
+[[ -z "$CIFS_SERVER_NAME" ]] && {
+	read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
+	CIFS_SERVER_NAME=ontaps-${C}-${D}
+}
 CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 LOCAL_USER=root
 LOCAL_USER_PASSWD=Sesame~0pen
@@ -545,6 +548,10 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 			{Enter the user name:} {
 				send \"${AD_ADMIN}\\r\"
 				expect {Enter the password:} { send \"${AD_PASSWD}\\r\" }
+				expect {
+					{Ok to reuse this account? {y|n}:} { send \"y\\r\" }
+					{${cluster_name}::>} { send \"\\r\" }
+				}
 			}
 			{${cluster_name}::>} {
 				send \"vserver cifs users-and-groups local-user create -vserver $VS -user-name $CIFS_SERVER_NAME\\\\${LOCAL_USER} -full-name ${LOCAL_USER}\\r\"
