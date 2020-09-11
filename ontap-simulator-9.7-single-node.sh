@@ -583,10 +583,11 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect eof
 "
 
+TimeZone=$(timedatectl | awk '/Time zone:/{print $3}')
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
-	expect {${cluster_name}::>} { send \"cluster date modify -timezone $(date +%Z)\\r\" }
+	expect {${cluster_name}::>} { send \"cluster date modify -timezone ${TimeZone:-America/New_York}\\r\" }
 	expect {${cluster_name}::>} { send \"cluster date modify -date \\\"$(date '+%m/%d/%Y %H:%M:%S')\\\"\\r\" }
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
