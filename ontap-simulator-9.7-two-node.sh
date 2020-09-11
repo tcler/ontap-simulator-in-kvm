@@ -610,7 +610,7 @@ LIF2_1_PORT=e0f
 
 [[ -z "$CIFS_SERVER_NAME" ]] && {
 	read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
-	CIFS_SERVER_NAME=ontap2-${C}-${D}
+	CIFS_SERVER_NAME=ontap2-$(printf %02X%02X%02X%02X $A $B $C $D)
 }
 CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 LOCAL_USER=root

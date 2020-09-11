@@ -462,7 +462,7 @@ VOL2_JUNCTION_PATH=/share2
 
 [[ -z "$CIFS_SERVER_NAME" ]] && {
 	read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
-	CIFS_SERVER_NAME=ontaps-${C}-${D}
+	CIFS_SERVER_NAME=ontaps-$(printf %02X%02X%02X%02X $A $B $C $D)
 }
 CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 LOCAL_USER=root
