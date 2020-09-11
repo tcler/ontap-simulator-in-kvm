@@ -207,7 +207,7 @@ vncwait() {
 ##please change/cusotmize bellow default configration at first
 cluster_name=fsqe-snc1
 password=fsqe2020
-NTP_SERVER=${NTP_SERVER:-192.168.20.1}
+NTP_SERVER=${NTP_SERVER:-192.168.10.1}
 
 vmnode=ontap-single
 node_managementif_port=e0c
