@@ -80,9 +80,9 @@ done
 
 
 # __main__
-rundir=/tmp/ontap-simulator-s-$$
-mkdir -p $rundir
-clean() { rm -rf $rundir; }
+Rundir=/tmp/ontap-simulator-s-$$
+mkdir -p $Rundir
+clean() { rm -rf $Rundir; }
 trap "clean" EXIT
 
 getIp4() {
@@ -132,9 +132,9 @@ vncget() {
 	local _vncaddr=$1
 
 	[[ -z "$_vncaddr" ]] && return 1
-	vncdo -s ${_vncaddr} capture $rundir/_screen.png
-	$ConvertCmd $rundir/_screen.png  -threshold 30%  $rundir/_screen2.png
-	gocr -i $rundir/_screen2.png 2>/dev/null
+	vncdo -s ${_vncaddr} capture $Rundir/_screen.png
+	$ConvertCmd $Rundir/_screen.png  -threshold 30%  $Rundir/_screen2.png
+	gocr -i $Rundir/_screen2.png 2>/dev/null
 }
 colorvncget() { vncget "$@" | GREP_COLORS='ms=01;30;47' grep --color .; }
 
