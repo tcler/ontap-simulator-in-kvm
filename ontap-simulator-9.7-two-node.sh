@@ -722,6 +722,18 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"vserver cifs share create -share-name $SHARENAME2 -vserver $VS -path $CIFSVOL2_PATH\\r\"
 	}
 	expect {${cluster_name}::>} {
+		send \"set -privilege advanced\\r\"
+		expect {
+			{Do you want to continue? {y|n}:} {
+				send \"y\\r\"
+			}
+			{${cluster_name}::*>} {
+				send \"vserver cifs options modify -vserver $VS -is-trusted-domain-enum-search-enabled false\\r\"
+			}
+			{${cluster_name}::*>} { send \"set -privilege admin\\r\" }
+		}
+	}
+	expect {${cluster_name}::>} {
 		send \"cifs share show -vserver $VS\\r\"
 	}
 
