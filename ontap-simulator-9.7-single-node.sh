@@ -234,7 +234,7 @@ read controller_located _ < <(hostname -A)
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> creating network ...\033[0m"
 netdata=ontap-data
-vm netcreate netname=$netdata brname=br-ontap subnet=10
+vm netcreate netname=$netdata brname=br-ontap-data subnet=10
 vm net | grep -w $netdata >/dev/null || vm netstart $netdata
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
