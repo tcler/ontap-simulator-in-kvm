@@ -48,7 +48,7 @@ Usage() {
 	  --node2-pubaddr <ip>               #node2 management address for public access
 	  --lif1-pubaddr <ip>                #default lif1.1 address for public access
 	  --lif2-pubaddr <ip>                #default lif2.1 address for public access
-	  --cifs-server-name <NetBIOS>       #CIFS Server NetBIOS Name
+	  --vserver-name <NetBIOS>           #NetBIOS(or host name) of vserver, used by krb5 configuring
 	  --cifs-workgroup <NetBIOS>         #Workgroup Name, This parameter specifies the name of the workgroup (up to 15 characters).
 	  --ad-domain <FQDN>                 #Fully Qualified Domain Name, This parameter specifies the name of the Active Directory domain to associate with the CIFS server.
 	  --ad-admin <user>                  #Active Directory admin user name
@@ -67,7 +67,7 @@ _at=`getopt -o h \
 	--long node2-pubaddr: \
 	--long lif1-pubaddr: \
 	--long lif2-pubaddr: \
-	--long cifs-server-name: \
+	--long vserver-name: \
 	--long cifs-workgroup: \
 	--long ad-domain: --long cifs-ad-domain: \
 	--long ad-admin: --long cifs-ad-admin: \
@@ -85,7 +85,7 @@ while true; do
 	--node2-pubaddr)  node2_managementif_addr=$2; shift 2;;
 	--lif1-pubaddr)   LIF1_1_ADDR=$2; shift 2;;
 	--lif2-pubaddr)   LIF2_1_ADDR=$2; shift 2;;
-	--cifs-server-name) CIFS_SERVER_NAME=$2; shift 2;;
+	--vserver-name)   NAS_SERVER_NAME=$2; shift 2;;
 	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
 	--ad-domain|--cifs-ad-domain) AD_DOMAIN=$2; shift 2;;
 	--ad-admin|--cifs-ad-admin)   AD_ADMIN=$2; shift 2;;
@@ -615,9 +615,9 @@ LIF2_1_MASK=$(getDefaultIp4Mask)
 LIF2_1_NODE=${cluster_name}-02
 LIF2_1_PORT=e0f
 
-[[ -z "$CIFS_SERVER_NAME" ]] && {
+[[ -z "$NAS_SERVER_NAME" ]] && {
 	read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
-	CIFS_SERVER_NAME=ontap2-$(printf %02X%02X%02X%02X $A $B $C $D)
+	NAS_SERVER_NAME=ontap2-$(printf %02X%02X%02X%02X $A $B $C $D)
 }
 CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 LOCAL_USER=root
@@ -705,7 +705,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"ntp server create -server $NTP_SERVER\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"cifs create -vserver $VS -cifs-server $CIFS_SERVER_NAME $cifsOption\\r\"
+		send \"cifs create -vserver $VS -cifs-server $NAS_SERVER_NAME $cifsOption\\r\"
 		expect {
 			{Enter the user name:} {
 				send \"${AD_ADMIN}\\r\"
@@ -716,7 +716,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 				}
 			}
 			{${cluster_name}::>} {
-				send \"vserver cifs users-and-groups local-user create -vserver $VS -user-name $CIFS_SERVER_NAME\\\\${LOCAL_USER} -full-name ${LOCAL_USER}\\r\"
+				send \"vserver cifs users-and-groups local-user create -vserver $VS -user-name $NAS_SERVER_NAME\\\\${LOCAL_USER} -full-name ${LOCAL_USER}\\r\"
 				expect {Enter the password:} { send \"${LOCAL_USER_PASSWD}\\r\" }
 				expect {Confirm the password:} { send \"${LOCAL_USER_PASSWD}\\r\" }
 			}
