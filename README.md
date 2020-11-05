@@ -32,7 +32,7 @@ bash ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh     #deploy a two no
 
 ### more examples
 ```
-time ontap-simulator-in-kvm/ontap-simulator-9.7-single-node.sh --node-pubaddr 10.66.12.108 --lif-pubaddr 10.66.12.1 --ntp-server=10.5.26.10  --dnsaddrs=10.73.4.201 --dnsdomains=rhts.eng.pek2.redhat.com --ad-domain=rhts.eng.pek2.redhat.com --ad-admin=administrator --ad-passwd=Hello2020~
+time ontap-simulator-in-kvm/ontap-simulator-9.7-single-node.sh --node-pubaddr 10.66.12.108 --lif-pubaddr 10.66.12.1 --ntp-server=10.5.26.10  --dnsaddrs=10.73.4.201 --dnsdomains=rhts.eng.pek2.redhat.com  --ad-ip=10.73.4.201 --ad-hostname=hp-dl385pg8-02.rhts.eng.pek2.redhat.com --ad-admin=administrator --ad-passwd=Hello2020~
 
-time ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh --node1-pubaddr 10.66.12.176 --node2-pubaddr 10.66.12.160 --lif1-pubaddr 10.66.12.4 --lif2-pubaddr 10.66.12.5 --ntp-server=10.5.26.10  --dnsaddrs=10.73.4.201 --dnsdomains=rhts.eng.pek2.redhat.com --ad-domain=rhts.eng.pek2.redhat.com --ad-admin=administrator --ad-passwd=Hello2020~
+time ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh --node1-pubaddr 10.66.12.176 --node2-pubaddr 10.66.12.160 --lif1-pubaddr 10.66.12.4 --lif2-pubaddr 10.66.12.5 --ntp-server=10.5.26.10  --dnsaddrs=10.73.4.201 --dnsdomains=rhts.eng.pek2.redhat.com --ad-hostname=hp-dl385pg8-02.rhts.eng.pek2.redhat.com --ad-ip=10.73.4.201 --ad-admin=administrator --ad-passwd=Hello2020~
 ```

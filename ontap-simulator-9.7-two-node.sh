@@ -50,7 +50,8 @@ Usage() {
 	  --lif2-pubaddr <ip>                #default lif2.1 address for public access
 	  --vserver-name <NetBIOS>           #NetBIOS(or host name) of vserver, used by krb5 configuring
 	  --cifs-workgroup <NetBIOS>         #Workgroup Name, This parameter specifies the name of the workgroup (up to 15 characters).
-	  --ad-domain <FQDN>                 #Fully Qualified Domain Name, This parameter specifies the name of the Active Directory domain to associate with the CIFS server.
+	  --ad-hostname <FQDN>               #Fully Qualified Domain Name, This parameter specifies the name of window servers.
+	  --ad-ip <ip>                       #window servers ip.
 	  --ad-admin <user>                  #Active Directory admin user name
 	  --ad-passwd <passwd>               #Active Directory admin password
 	  --ntp-server <addr>                #ntp server address
@@ -69,7 +70,8 @@ _at=`getopt -o h \
 	--long lif2-pubaddr: \
 	--long vserver-name: \
 	--long cifs-workgroup: \
-	--long ad-domain: --long cifs-ad-domain: \
+	--long ad-hostname: \
+	--long ad-ip: \
 	--long ad-admin: --long cifs-ad-admin: \
 	--long ad-passwd: --long cifs-ad-passwd: \
 	--long ntp-server: \
@@ -87,7 +89,8 @@ while true; do
 	--lif2-pubaddr)   LIF2_1_ADDR=$2; shift 2;;
 	--vserver-name)   NAS_SERVER_NAME=$2; shift 2;;
 	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
-	--ad-domain|--cifs-ad-domain) AD_DOMAIN=$2; shift 2;;
+	--ad-hostname) AD_NAME=$2; shift 2;;
+	--ad-ip)          AD_IP=$2; shift 2;;
 	--ad-admin|--cifs-ad-admin)   AD_ADMIN=$2; shift 2;;
 	--ad-passwd|--cifs-ad-passwd) AD_PASSWD=$2; shift 2;;
 	--ntp-server)     NTP_SERVER=$2; shift 2;;
@@ -623,8 +626,9 @@ CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 LOCAL_USER=root
 LOCAL_USER_PASSWD=Sesame~0pen
 cifsOption="-workgroup $CIFS_WORKGROUP"
-AD_DOMAIN=${AD_DOMAIN}
+AD_DOMAIN=${AD_NAME#*.}
 [[ -n "$AD_DOMAIN" ]] && cifsOption="-domain $AD_DOMAIN"
+AD_REALM=$(echo ${AD_DOMAIN} | tr [:lower:] [:upper:])
 AD_ADMIN=${AD_ADMIN:-administrator}
 AD_PASSWD=${AD_PASSWD:-fsqe2015!}
 CIFSVOL1=cifsvol1
@@ -657,13 +661,13 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"vserver export-policy create -vserver $VS -policyname $PolicyName\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"vserver export-policy rule create -vserver $VS -policyname $PolicyName -protocol cifs,nfs,nfs3,nfs4,flexcache -clientmatch 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16 -rorule any -rwrule krb5,sys,ntlm -anon 65534 -allow-suid true -allow-dev true\\r\"
+		send \"vserver export-policy rule create -vserver $VS -policyname $PolicyName -protocol cifs,nfs,nfs3,nfs4,flexcache -clientmatch 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16 -rorule any -rwrule any -anon 65534 -allow-suid true -allow-dev true\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume modify -vserver $VS -volume ${VS}_root -policy $PolicyName\\r\"
+		send \"volume modify -vserver $VS -volume ${VS}_root -policy $PolicyName -group 0 -user 0\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume create -volume $VOL1 -aggregate $VOL1_AGGR -size $VOL1_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL1_JUNCTION_PATH -policy $PolicyName\\r\"
+		send \"volume create -volume $VOL1 -aggregate $VOL1_AGGR -size $VOL1_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL1_JUNCTION_PATH -policy $PolicyName -group 0 -user 0\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface create -vserver $VS -lif $LIF1_0_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_0_ADDR -netmask $LIF1_0_MASK -home-node $LIF1_0_NODE -home-port $LIF1_0_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
@@ -672,7 +676,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"network interface create -vserver $VS -lif $LIF1_1_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_1_ADDR -netmask $LIF1_1_MASK -home-node $LIF1_1_NODE -home-port $LIF1_1_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume create -volume $VOL2 -aggregate $VOL2_AGGR -size $VOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL2_JUNCTION_PATH -policy $PolicyName\\r\"
+		send \"volume create -volume $VOL2 -aggregate $VOL2_AGGR -size $VOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL2_JUNCTION_PATH -policy $PolicyName -group 0 -user 0\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"network interface create -vserver $VS -lif $LIF2_0_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF2_0_ADDR -netmask $LIF2_0_MASK -home-node $LIF2_0_NODE -home-port $LIF2_0_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
@@ -690,16 +694,19 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"vserver nfs create -access true -v3 enabled -v4.0 enabled -tcp enabled -v4.0-acl enabled -v4.0-read-delegation enabled -v4.0-write-delegation enabled -v4-id-domain defaultv4iddomain.com -v4-grace-seconds 45 -v4-acl-preserve enabled -v4.1 enabled -rquota enabled -v4.1-acl enabled -vstorage enabled -v4-numeric-ids enabled -v4.1-read-delegation enabled -v4.1-write-delegation enabled -mount-rootonly disabled -nfs-rootonly disabled -permitted-enc-types des,des3,aes-128,aes-256 -showmount enabled -name-service-lookup-protocol udp\\r\"
 	}
 	expect {${cluster_name}::>} {
+		send \"unix-user create -vserver $VS -user nfs -id 500 -primary-gid 0\\r\"
+	}
+	expect {${cluster_name}::>} {
 		send \"vserver export-policy check-access -vserver $VS -volume $VOL1 -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"vserver export-policy check-access -vserver $VS -volume $VOL2 -client-ip $testIp -authentication-method sys -protocol nfs4 -access-type read-write\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume create -volume $CIFSVOL1 -aggregate $CIFSVOL1_AGGR -size $CIFSVOL1_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -vserver $VS -junction-path $CIFSVOL1_PATH -policy $PolicyName\\r\"
+		send \"volume create -volume $CIFSVOL1 -aggregate $CIFSVOL1_AGGR -size $CIFSVOL1_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -vserver $VS -junction-path $CIFSVOL1_PATH -policy $PolicyName -group 0 -user 0\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"volume create -volume $CIFSVOL2 -aggregate $CIFSVOL2_AGGR -size $CIFSVOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW  -vserver $VS -junction-path $CIFSVOL2_PATH -policy $PolicyName\\r\"
+		send \"volume create -volume $CIFSVOL2 -aggregate $CIFSVOL2_AGGR -size $CIFSVOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW  -vserver $VS -junction-path $CIFSVOL2_PATH -policy $PolicyName -group 0 -user 0\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"ntp server create -server $NTP_SERVER\\r\"
@@ -721,6 +728,9 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 				expect {Confirm the password:} { send \"${LOCAL_USER_PASSWD}\\r\" }
 			}
 		}
+	}
+	expect {${cluster_name}::>} {
+		send \"cifs security modify -is-aes-encryption-enabled true -vserver $VS\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"vserver cifs share create -share-name $SHARENAME -vserver $VS -path $CIFSVOL1_PATH\\r\"
@@ -749,6 +759,15 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect eof
 "
+LogOutPut=$(expect -c "spawn ssh admin@$cluster_managementif_addr
+        set timeout 120
+        expect {Password:} { send \"${password}\\r\" }
+        expect {${cluster_name}::>} { send \"cifs show  -vserver $VS -fields domain-workgroup\\r\" }
+        expect {${cluster_name}::>} { send \"exit\\r\" }
+        expect eof
+        ")
+
+NETBIOS_WIN=`echo "$LogOutPut" |grep -A 2 domain-workgroup | awk 'END{print $2}'`
 
 TimeZone=$(timedatectl | awk '/Time zone:/{print $3}')
 expect -c "spawn ssh admin@$cluster_managementif_addr
@@ -756,6 +775,19 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {Password:} { send \"${password}\\r\" }
 	expect {${cluster_name}::>} { send \"cluster date modify -timezone ${TimeZone:-America/New_York}\\r\" }
 	expect {${cluster_name}::>} { send \"cluster date modify -date \\\"$(date '+%m/%d/%Y %H:%M:%S')\\\"\\r\" }
+	expect {${cluster_name}::>} {
+		send \"vserver name-mapping  create -vserver $VS -direction krb-unix -position 1 -pattern (.+)\\\\\$@$AD_REALM  -replacement root\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"vserver name-mapping  create -vserver $VS -direction unix-win -position 1 -pattern root -replacement $NETBIOS_WIN\\\\\\\\${AD_ADMIN}\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"kerberos realm create  -realm $AD_REALM -adserver-ip $AD_IP -adminserver-ip $AD_IP -kdc-ip $AD_IP -vserver $VS  -kdc-vendor Microsoft  -adserver-name $AD_NAME\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"kerberos interface enable -lif $LIF1_1_NAME -admin-username ${AD_ADMIN} -spn nfs/${CIFS_SERVER_NAME}.${AD_DOMAIN}@${AD_REALM}\\r\"
+		expect {password:} { send \"${AD_PASSWD}\\r\" }
+	}
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
 "
