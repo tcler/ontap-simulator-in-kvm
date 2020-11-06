@@ -785,8 +785,8 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"kerberos realm create  -realm $AD_REALM -adserver-ip $AD_IP -adminserver-ip $AD_IP -kdc-ip $AD_IP -vserver $VS  -kdc-vendor Microsoft  -adserver-name $AD_NAME\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"kerberos interface enable -lif $LIF1_1_NAME -admin-username ${AD_ADMIN} -spn nfs/${CIFS_SERVER_NAME}.${AD_DOMAIN}@${AD_REALM}\\r\"
-		expect {password:} { send \"${AD_PASSWD}\\r\" }
+		send \"kerberos interface enable -lif $LIF1_1_NAME -admin-username ${AD_ADMIN} -spn nfs/${NAS_SERVER_NAME}.${AD_DOMAIN}@${AD_REALM}\\r\"
+		expect {Password:} { send \"${AD_PASSWD}\\r\" }
 	}
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
