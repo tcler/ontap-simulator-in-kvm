@@ -57,8 +57,8 @@ _at=`getopt -o h \
 	--long cifs-workgroup: \
 	--long ad-hostname: \
 	--long ad-ip: \
-	--long ad-admin: --long cifs-ad-admin: \
-	--long ad-passwd: --long cifs-ad-passwd: \
+	--long ad-admin: \
+	--long ad-passwd: \
 	--long ntp-server: \
     -a -n "$0" -- "$@"`
 [[ $? != 0 ]] && { exit 1; }
@@ -74,8 +74,8 @@ while true; do
 	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
 	--ad-hostname)    AD_NAME=$2; shift 2;;
 	--ad-ip)          AD_IP=$2; shift 2;;
-	--ad-admin|--cifs-ad-admin)   AD_ADMIN=$2; shift 2;;
-	--ad-passwd|--cifs-ad-passwd) AD_PASSWD=$2; shift 2;;
+	--ad-admin)       AD_ADMIN=$2; shift 2;;
+	--ad-passwd)      AD_PASSWD=$2; shift 2;;
 	--ntp-server)     NTP_SERVER=$2; shift 2;;
 	--) shift; break;;
 	esac
