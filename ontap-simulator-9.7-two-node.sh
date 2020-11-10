@@ -646,6 +646,17 @@ SHARENAME2=cifs2
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
 #ref3: https://tcler.github.io/2017/08/24/NetApp-pnfs-mds-ds-config
 
+expect -c "spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@$AD_IP
+	expect {password:} { send \"${AD_PASSWD}\\r\" }
+	expect {>} { send \"powershell\\r\" }
+	expect {>} {
+		send \"Add-DnsServerResourceRecordA -Name "$NAS_SERVER_NAME" -ZoneName "$AD_DOMAIN" -AllowUpdateAny -IPv4Address '$LIF1_1_ADDR'\\r\"
+}
+        expect {>} { send \"exit\\r\" }
+        expect {>} { send \"exit\\r\" }
+        expect eof
+"
+
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} {
