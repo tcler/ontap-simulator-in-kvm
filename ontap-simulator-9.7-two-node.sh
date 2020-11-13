@@ -620,7 +620,7 @@ LIF2_1_PORT=e0f
 
 [[ -z "$NAS_SERVER_NAME" ]] && {
 	read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
-	NAS_SERVER_NAME=ontap2-$(printf %02X%02X%02X%02X $A $B $C $D)
+	NAS_SERVER_NAME=ontap2-$(printf %02x%02x $C $D)
 }
 CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 LOCAL_USER=root

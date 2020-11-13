@@ -472,7 +472,7 @@ VOL2_JUNCTION_PATH=/share2
 
 [[ -z "$NAS_SERVER_NAME" ]] && {
 	read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
-	NAS_SERVER_NAME=ontaps-$(printf %02X%02X%02X%02X $A $B $C $D)
+	NAS_SERVER_NAME=ontap-$(printf %02x%02x $C $D)
 }
 CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 LOCAL_USER=root
