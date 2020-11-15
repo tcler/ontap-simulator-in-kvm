@@ -802,6 +802,16 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
 "
+expect -c "spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@$AD_IP
+	expect {password:} { send \"${AD_PASSWD}\\r\" }
+	expect {>} { send \"powershell\\r\" }
+	expect {>} {
+		send \"Set-ADComputer NFS-${NAS_SERVER_NAME} -KerberosEncryptionType AES256,AES128,DES,RC4\\r\"
+}
+	expect {>} { send \"exit\\r\" }
+	expect {>} { send \"exit\\r\" }
+	expect eof
+"
 
 cifs_delete() {
 	expect -c "spawn ssh admin@$cluster_managementif_addr
@@ -822,3 +832,15 @@ cifs_delete() {
 		expect eof
 	"
 }
+
+OntapInfo=/tmp/ontapinfo.env
+cat << EOF | tee $OntapInfo
+NETAPP_NAS_HOSTNAME=${NAS_SERVER_NAME}.${AD_DOMAIN}
+NETAPP_NAS_IP=$LIF1_1_ADDR
+NETAPP_NAS_IP_LOC=$LIF1_0_ADDR
+NETAPP_NFS_SHARE=$VOL1_JUNCTION_PATH
+NETAPP_NFS_SHARE2=$VOL2_JUNCTION_PATH
+NETAPP_CIFS_SHARE=$SHARENAME1
+NETAPP_CIFS_SHARE2=$SHARENAME2
+EOF
+

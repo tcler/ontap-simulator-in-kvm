@@ -622,7 +622,7 @@ LogOutPut=$(expect -c "spawn ssh admin@$cluster_managementif_addr
         expect eof
         ")
 
-NETBIOS_WIN=`echo "$LogOutPut" |grep -A 2 domain-workgroup | awk 'END{print $2}'`
+NETBIOS_WIN=$(echo "$LogOutPut" |grep -A 2 domain-workgroup | awk 'END{print $2}')
 
 TimeZone=$(timedatectl | awk '/Time zone:/{print $3}')
 expect -c "spawn ssh admin@$cluster_managementif_addr
@@ -640,12 +640,29 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"kerberos realm create  -realm $AD_REALM -adserver-ip $AD_IP -adminserver-ip $AD_IP -kdc-ip $AD_IP -vserver $VS  -kdc-vendor Microsoft  -adserver-name $AD_NAME\\r\"
 	}
 	expect {${cluster_name}::>} {
+		send \"kerberos realm show -vserver $VS\\r\"
+	}
+	expect {${cluster_name}::>} {
+		send \"sleep 5\\r\"
+	}
+	expect {${cluster_name}::>} {
 		send \"kerberos interface enable -lif $LIF1_1_NAME -admin-username ${AD_ADMIN} -spn nfs/${NAS_SERVER_NAME}.${AD_DOMAIN}@${AD_REALM}\\r\"
 		expect {Password:} { send \"${AD_PASSWD}\\r\" }
 	}
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
 "
+
+expect -c "spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@$AD_IP
+	expect {password:} { send \"${AD_PASSWD}\\r\" }
+	expect {>} { send \"powershell\\r\" }
+	expect {>} {
+		send \"Set-ADComputer NFS-${NAS_SERVER_NAME} -KerberosEncryptionType AES256,AES128,DES,RC4\\r\"
+}
+	expect {>} { send \"exit\\r\" }
+	expect {>} { send \"exit\\r\" }
+	expect eof
+" 
 
 cifs_delete() {
 	expect -c "spawn ssh admin@$cluster_managementif_addr
@@ -666,3 +683,14 @@ cifs_delete() {
 		expect eof
 	"
 }
+
+OntapInfo=/tmp/ontapinfo.env
+cat << EOF | tee $OntapInfo
+NETAPP_NAS_HOSTNAME=${NAS_SERVER_NAME}.${AD_DOMAIN}
+NETAPP_NAS_IP=$LIF1_1_ADDR
+NETAPP_NAS_IP_LOC=$LIF1_0_ADDR
+NETAPP_NFS_SHARE=$VOL1_JUNCTION_PATH
+NETAPP_NFS_SHARE2=$VOL2_JUNCTION_PATH
+NETAPP_CIFS_SHARE=$SHARENAME1
+NETAPP_CIFS_SHARE2=$SHARENAME2
+EOF
