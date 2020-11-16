@@ -40,6 +40,7 @@ Usage() {
 	  --ad-hostname <FQDN>               #Fully Qualified Domain Name, This parameter specifies the name of window servers.
 	  --ad-ip <ip>                       #window servers ip.
 	  --ad-ip-hostonly <ip>              #window servers ip used to connect from VM HOST.
+	  --ssh-bind-ip <ip>                 #another public ip address used for ssh to KVM guest from host
 	  --ad-admin <user>                  #Active Directory admin user name
 	  --ad-passwd <passwd>               #Active Directory admin password
 	  --ntp-server <addr>                #ntp server address
@@ -59,6 +60,7 @@ _at=`getopt -o h \
 	--long ad-hostname: \
 	--long ad-ip: \
 	--long ad-ip-hostonly: \
+	--long ssh-bind-ip: \
 	--long ad-admin: \
 	--long ad-passwd: \
 	--long ntp-server: \
@@ -76,7 +78,8 @@ while true; do
 	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
 	--ad-hostname)    AD_NAME=$2; shift 2;;
 	--ad-ip)          AD_IP=$2; shift 2;;
-	--ad-ip-hostonly) AD_IP_HOSTONLY=$2; shift 2;;
+	--ad-ip-hostonly) AD_IP_HOSTONLY=$2; SSH_BIND_IP=; shift 2;;
+	--ssh-bind-ip)    SSH_BIND_IP=$2; AD_IP_HOSTONLY=; shift 2;;
 	--ad-admin)       AD_ADMIN=$2; shift 2;;
 	--ad-passwd)      AD_PASSWD=$2; shift 2;;
 	--ntp-server)     NTP_SERVER=$2; shift 2;;
@@ -504,7 +507,8 @@ SHARENAME2=cifs2
 #ref1: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/create.html
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
 
-expect -c "spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
+[[ -n "$SSH_BIND_IP" ]] && SSH_BIND_OPT="-b $SSH_BIND_IP"
+expect -c "spawn ssh $SSH_BIND_IP -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
 	expect {password:} { send \"${AD_PASSWD}\\r\" }
 	expect {>} { send \"powershell\\r\" }
 	expect {>} {
@@ -660,7 +664,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect eof
 "
 
-expect -c "spawn ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
+expect -c "spawn ssh $SSH_BIND_IP -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
 	expect {password:} { send \"${AD_PASSWD}\\r\" }
 	expect {>} { send \"powershell\\r\" }
 	expect {>} {
