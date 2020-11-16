@@ -96,10 +96,14 @@ getIp4() {
 	local nic=$1
 	local ipaddr=`ip addr show $nic`;
 	ret=$(echo "$ipaddr" |
-		awk '/inet .* dynamic/{match($0,"inet ([0-9.]+/[0-9]+)",M); print M[1]}');
+		awk '/inet .* global dynamic/{match($0,"inet ([0-9.]+/[0-9]+)",M); print M[1]}');
 
-	echo "$ret"
-	[ -z "$ret" ] && return 1 || return 0
+	if [[ -n "$ret" ]]; then
+		echo "$ret"
+		return 0
+	else
+		return 1
+	fi
 }
 getDefaultNic() { ip route | awk '/default/{match($0,"dev ([^ ]+)",M); print M[1]; exit}'; }
 getDefaultIp4() {
