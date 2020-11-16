@@ -18,7 +18,9 @@ git clone --depth=1 https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns
 # download url: https://mysupport.netapp.com/site/tools/tool-eula/simulate-ontap
 # note: need log in to the NetApp Support Site athttp://mysupport-beta.netapp.com/ before download
 tar vxf vsim-netapp-DOT9.7-cm_nodar.ova
-for i in {1..4}; do qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2; done
+for i in {1..4}; do
+    qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2
+done
 ```
 
 ### run the automation script
@@ -32,7 +34,25 @@ bash ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh     #deploy a two no
 
 ### more examples
 ```
-time ontap-simulator-in-kvm/ontap-simulator-9.7-single-node.sh --node-pubaddr 10.66.61.3 --lif-pubaddr 10.66.61.6 --ntp-server=10.5.26.10 --dnsaddrs=10.73.4.201 --dnsdomains=rhts.eng.pek2.redhat.com --ad-hostname=hp-dl385pg8-02.rhts.eng.pek2.redhat.com --ad-ip=10.73.4.201 --ad-admin=administrator --ad-passwd=Hello2020~
+NTP_SERVER=10.5.26.10
+WIN_AD_HOSTNAME=win-2016
+WIN_AD_IP=${VM_EXT_IP}
+DNS_DOMAIN=fstest.redhat.com
+DNS_ADDR=$WIN_AD_IP
+AD_HOSTNAME=$WIN_AD_HOSTNAME.fstest.redhat.com
+AD_ADMIN=administrator
+AD_PASS=~Ocgxyz
 
-time ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh --node1-pubaddr 10.66.60.66 --node2-pubaddr 10.66.60.77 --lif1-pubaddr 10.66.60.89 --lif2-pubaddr 10.66.60.174 --ntp-server=10.5.26.10 --dnsaddrs=10.73.4.201 --dnsdomains=rhts.eng.pek2.redhat.com --ad-hostname=hp-dl385pg8-02.rhts.eng.pek2.redhat.com --ad-ip=10.73.4.201 --ad-admin=administrator --ad-passwd=Hello2020~
+time ontap-simulator-in-kvm/ontap-simulator-9.7-single-node.sh \
+  --node-pubaddr 10.66.61.3 --lif-pubaddr 10.66.61.6 \
+  --ntp-server=$NTP_SERVER --dnsdomains=$DNS_DOMAIN --dnsaddrs=$DNS_ADDR \
+  --ad-hostname=$AD_HOSTNAME --ad-ip=$AD_IP \
+  --ad-admin=$AD_ADMIN --ad-passwd=$AD_PASS --ad-ip-hostonly "${VM_INT_IP}"
+
+time ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh \
+  --node1-pubaddr 10.66.60.66 --node2-pubaddr 10.66.60.77 \
+  --lif1-pubaddr 10.66.60.89 --lif2-pubaddr 10.66.60.174 \
+  --ntp-server=$NTP_SERVER --dnsdomains=$DNS_DOMAIN --dnsaddrs=$DNS_ADDR \
+  --ad-hostname=$AD_HOSTNAME --ad-ip=$AD_IP \
+  --ad-admin=$AD_ADMIN --ad-passwd=$AD_PASS --ad-ip-hostonly "${VM_INT_IP}"
 ```
