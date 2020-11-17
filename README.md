@@ -36,10 +36,10 @@ bash ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh     #deploy a two no
 ```
 NTP_SERVER=10.5.26.10
 WIN_AD_HOSTNAME=win-2016
-WIN_AD_IP=${VM_EXT_IP}
 DNS_DOMAIN=fstest.redhat.com
 DNS_ADDR=$WIN_AD_IP
 AD_HOSTNAME=$WIN_AD_HOSTNAME.fstest.redhat.com
+AD_IP=${VM_EXT_IP}
 AD_ADMIN=administrator
 AD_PASS=~Ocgxyz
 
