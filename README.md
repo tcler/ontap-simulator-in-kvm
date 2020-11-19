@@ -34,14 +34,16 @@ bash ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh     #deploy a two no
 
 ### more examples
 ```
+#install windows ad VM by using https://github.com/tcler/make-windows-vm
+
+eval $(< /tmp/${WinVmName}.env)
 NTP_SERVER=10.5.26.10
-WIN_AD_HOSTNAME=win-2016
-DNS_DOMAIN=fstest.redhat.com
-DNS_ADDR=$WIN_AD_IP
-AD_HOSTNAME=$WIN_AD_HOSTNAME.fstest.redhat.com
+DNS_DOMAIN=${AD_DOMAIN}
+DNS_ADDR=${VM_EXT_IP}
+AD_HOSTNAME=${AD_FQDN}
 AD_IP=${VM_EXT_IP}
-AD_ADMIN=administrator
-AD_PASS=~Ocgxyz
+AD_ADMIN=${ADMINUSER}
+AD_PASS=${ADMINPASSWORD}
 
 time ontap-simulator-in-kvm/ontap-simulator-9.7-single-node.sh \
   --node-pubaddr 10.66.61.3 --lif-pubaddr 10.66.61.6 \
