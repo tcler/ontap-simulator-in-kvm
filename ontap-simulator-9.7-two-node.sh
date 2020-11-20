@@ -250,6 +250,10 @@ netdata=ontap2-data  #e0d #e0e
 vm netcreate netname=$netdata brname=br-ontap2-data subnet=20
 vm net | grep -w $netdata >/dev/null || vm netstart $netdata
 
+:; echo -e "\n\033[1;30m================================================================================\033[0m"
+:; echo -e "\033[1;30m=> creating macvlan if mv-ontap ...\033[0m"
+netns host,mv-ontap,dhcp
+
 #===============================================================================
 #cluster
 cluster_name=fsqe-2nc1
