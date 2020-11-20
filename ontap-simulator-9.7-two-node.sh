@@ -141,7 +141,7 @@ freeIpList() {
 	echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d'
 }
 
-getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
+getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
 dns_domain_names() { sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf; }
 dns_addrs() {
 	if grep -q 127.0.0.53 /etc/resolv.conf; then
