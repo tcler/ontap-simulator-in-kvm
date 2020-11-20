@@ -125,7 +125,15 @@ getIp4() {
 		return 1
 	fi
 }
-getDefaultNic() { ip route | awk '/default/{match($0,"dev ([^ ]+)",M); print M[1]; exit}'; }
+getDefaultNic() {
+	local nics=$(ip route | awk '/default/{match($0,"dev ([^ ]+)",M); print M[1]}')
+	for nic in $nics; do
+		[[ -z "$(ip -d link show  dev $nic|sed -n 3p)" ]] && {
+			break
+		}
+	done
+	[[ -n "$nic" ]] && echo "$nic"
+}
 getDefaultIp4() {
 	local nic=$(getDefaultNic)
 	[ -z "$nic" ] && return 1
