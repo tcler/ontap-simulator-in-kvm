@@ -125,7 +125,7 @@ freeIpList() {
 }
 
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3}'; }
-dns_domain_names() { sed -n '/^search */{s///; s/ /,/g; p}' /etc/resolv.conf; }
+dns_domain_names() { sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf; }
 dns_addrs() {
 	if grep -q 127.0.0.53 /etc/resolv.conf; then
 		systemd-resolve --status -4 $(getDefaultNic) | sed 's/:/:\n/' |
