@@ -421,7 +421,8 @@ vm -n $vmnode2 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --disable-
 	--net-macvtap=-,e1000 \
 	--net=$netdata,e1000 --net=$netdata,e1000 \
 	--net-macvtap=-,e1000 \
-	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2,cores=2
+	--noauto --force --nocloud --osv freebsd11.2 \
+	--bus=ide --msize $((6*1024)) --cpus 2,cores=2 --vncput-after-install "x"
 
 read vncaddr <<<"$(vm vnc $vmnode2)"
 vncaddr=${vncaddr/:/::}
