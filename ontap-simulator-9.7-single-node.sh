@@ -139,7 +139,7 @@ dns_addrs() {
 		systemd-resolve --status -4 $(getDefaultNic) | sed 's/:/:\n/' |
 			sed -n '/^ *DNS Servers:/,/^ *DNS/ {/DNS.*:/d; s/ //g; p}' | paste -sd ,;
 	else
-		sed -n '/^nameserver */{s///; p}' /etc/resolv.conf | paste -sd ,;
+		sed -rn '/^nameserver */{s///; s/ *#.*$//; p}' /etc/resolv.conf | paste -sd ,;
 	fi
 }
 
@@ -247,9 +247,11 @@ cluster_managementif_addr=192.168.10.11
 cluster_managementif_mask=255.255.255.0
 cluster_managementif_gateway=192.168.10.1
 dns_domains=$(dns_domain_names)
-[[ -n "$DNS_DOMAINS" ]] && dns_domains=$(echo "${DNS_DOMAINS},${dns_domains}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$2,$3} else print}')
+[[ -n "$DNS_DOMAINS" && $dns_domains != ${DNS_DOMAINS},* ]] &&
+	dns_domains=$(echo "${DNS_DOMAINS},${dns_domains}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$2,$3} else print}')
 dns_addrs=$(dns_addrs)
-[[ -n "$DNS_ADDRS" ]] && dns_addrs=$(echo "${DNS_ADDRS},${dns_addrs}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$2,$3} else print}')
+[[ -n "$DNS_ADDRS" && $dns_addrs != ${DNS_ADDRS},* ]] &&
+	dns_addrs=$(echo "${DNS_ADDRS},${dns_addrs}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$2,$3} else print}')
 read controller_located _ < <(hostname -A)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
