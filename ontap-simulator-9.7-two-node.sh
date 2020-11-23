@@ -279,12 +279,15 @@ cluster_managementif_port=e0d
 cluster_managementif_addr=192.168.20.11
 cluster_managementif_mask=255.255.255.0
 cluster_managementif_gateway=192.168.20.1
+
 dns_domains=$(dns_domain_names)
-[[ -n "$DNS_DOMAINS" && $dns_domains != ${DNS_DOMAINS},* ]] &&
-	dns_domains=$(echo "${DNS_DOMAINS},${dns_domains}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$2,$3} else print}')
+[[ -n "$DNS_DOMAINS" && $dns_domains != ${DNS_DOMAINS},* ]] && dns_domains=${DNS_DOMAINS},${dns_domains}
+dns_domains=$(echo "${dns_domains}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$2,$3} else print}')
+
 dns_addrs=$(dns_addrs)
-[[ -n "$DNS_ADDRS" && $dns_addrs != ${DNS_ADDRS},* ]] &&
-	dns_addrs=$(echo "${DNS_ADDRS},${dns_addrs}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$2,$3} else print}')
+[[ -n "$DNS_ADDRS" && $dns_addrs != ${DNS_ADDRS},* ]] && dns_addrs=${DNS_ADDRS},${dns_addrs}
+dns_addrs=$(echo "${DNS_ADDRS},${dns_addrs}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$3,$3} else print}')
+
 read controller_located _ < <(hostname -A)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
