@@ -675,7 +675,9 @@ SHARENAME2=cifs2
 #ref3: https://tcler.github.io/2017/08/24/NetApp-pnfs-mds-ds-config
 
 [[ -n "$SSH_BIND_IP" ]] && SSH_BIND_OPT="-b $SSH_BIND_IP"
-expect -c "spawn ssh $SSH_BIND_IP -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
+
+[[ -n "$AD_DOMAIN" ]] && {
+	expect -c "spawn ssh $SSH_BIND_IP -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
 	expect {password:} { send \"${AD_PASSWD}\\r\" }
 	expect {>} { send \"powershell\\r\" }
 	expect {>} {
@@ -684,7 +686,8 @@ expect -c "spawn ssh $SSH_BIND_IP -o UserKnownHostsFile=/dev/null -o StrictHostK
         expect {>} { send \"exit\\r\" }
         expect {>} { send \"exit\\r\" }
         expect eof
-"
+	"
+}
 
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
@@ -799,18 +802,19 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect eof
 "
-LogOutPut=$(expect -c "spawn ssh admin@$cluster_managementif_addr
-        set timeout 120
-        expect {Password:} { send \"${password}\\r\" }
-        expect {${cluster_name}::>} { send \"cifs show  -vserver $VS -fields domain-workgroup\\r\" }
-        expect {${cluster_name}::>} { send \"exit\\r\" }
-        expect eof
-        ")
 
-NETBIOS_WIN=`echo "$LogOutPut" |grep -A 2 domain-workgroup | awk 'END{print $2}'`
+[[ -n "$AD_DOMAIN" ]] && {
+	LogOutPut=$(expect -c "spawn ssh admin@$cluster_managementif_addr
+		set timeout 120
+		expect {Password:} { send \"${password}\\r\" }
+		expect {${cluster_name}::>} { send \"cifs show  -vserver $VS -fields domain-workgroup\\r\" }
+		expect {${cluster_name}::>} { send \"exit\\r\" }
+		expect eof
+		")
+	NETBIOS_WIN=`echo "$LogOutPut" |grep -A 2 domain-workgroup | awk 'END{print $2}'`
+	TimeZone=$(timedatectl | awk '/Time zone:/{print $3}')
 
-TimeZone=$(timedatectl | awk '/Time zone:/{print $3}')
-expect -c "spawn ssh admin@$cluster_managementif_addr
+	expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
 	expect {${cluster_name}::>} { send \"cluster date modify -timezone ${TimeZone:-America/New_York}\\r\" }
@@ -830,17 +834,19 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
-"
-expect -c "spawn ssh $SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
+	"
+
+	expect -c "spawn ssh $SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
 	expect {password:} { send \"${AD_PASSWD}\\r\" }
 	expect {>} { send \"powershell\\r\" }
 	expect {>} {
 		send \"Set-ADComputer NFS-${NAS_SERVER_NAME} -KerberosEncryptionType AES256,AES128,DES,RC4\\r\"
-}
+	}
 	expect {>} { send \"exit\\r\" }
 	expect {>} { send \"exit\\r\" }
 	expect eof
-"
+	"
+}
 
 cifs_delete() {
 	expect -c "spawn ssh admin@$cluster_managementif_addr
