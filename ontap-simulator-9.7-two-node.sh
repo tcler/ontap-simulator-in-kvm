@@ -141,13 +141,20 @@ getDefaultIp4() {
 }
 getDefaultIp4Mask() { ipcalc -m $(getDefaultIp4) | sed 's/.*=//'; }
 freeIpList() {
+	local excludeIpList="$*"
 	IFS=/ read ip netmasklen < <(getDefaultIp4)
 	IFS== read key netaddr < <(ipcalc -n $ip/$netmasklen)
 	which nmap &>/dev/null || yum install -y nmap >/dev/null
 	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
 
-	echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d'
+	if [[ -n "$excludeIpList" ]]; then
+		echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d' |
+			egrep -v "^${excludeIpList// /|}$"
+	else
+		echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d'
+	fi
 }
+ExcludeIpList=($AD_IP)
 
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
 dns_domain_names() { sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf; }
@@ -258,10 +265,6 @@ netdata=ontap2-data  #e0d #e0e
 vm netcreate netname=$netdata brname=br-ontap2-data subnet=20
 vm net | grep -w $netdata >/dev/null || vm netstart $netdata
 
-:; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=> creating macvlan if mv-ontap ...\033[0m"
-netns host,mv-ontap,dhcp
-
 #===============================================================================
 #cluster
 cluster_name=fsqe-2nc1
@@ -314,7 +317,8 @@ vncwait ${vncaddr} "^login:" 5
 [[ -z "$node1_managementif_addr" ]] &&
 	node1_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node1_managementif_addr" ]] &&
-	node1_managementif_addr=$(freeIpList|sort -R|tail -1)
+	node1_managementif_addr=$(freeIpList "${ExcludeIpList[@]}"|sort -R|tail -1)
+ExcludeIpList+=($node1_managementif_addr)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
@@ -449,7 +453,8 @@ vncwait ${vncaddr} "^login:" 5
 [[ -z "$node2_managementif_addr" ]] &&
 	node2_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node2_managementif_addr" ]] &&
-	node2_managementif_addr=$(freeIpList|sort -R|tail -1)
+	node2_managementif_addr=$(freeIpList "${ExcludeIpList[@]}"|sort -R|tail -1)
+ExcludeIpList+=($node2_managementif_addr)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
@@ -626,7 +631,8 @@ LIF1_0_MASK=255.255.255.0
 LIF1_0_NODE=${cluster_name}-01
 LIF1_0_PORT=e0e
 LIF1_1_NAME=lif1.1
-[[ -z "$LIF1_1_ADDR" ]] && LIF1_1_ADDR=$(freeIpList|sort -R|head -1)
+[[ -z "$LIF1_1_ADDR" ]] && LIF1_1_ADDR=$(freeIpList "${ExcludeIpList[@]}"|sort -R|head -1)
+ExcludeIpList+=($LIF1_1_ADDR)
 LIF1_1_MASK=$(getDefaultIp4Mask)
 LIF1_1_NODE=${cluster_name}-01
 LIF1_1_PORT=e0f
@@ -641,7 +647,8 @@ LIF2_0_MASK=255.255.255.0
 LIF2_0_NODE=${cluster_name}-02
 LIF2_0_PORT=e0e
 LIF2_1_NAME=lif2.1
-[[ -z "$LIF2_1_ADDR" ]] && LIF2_1_ADDR=$(freeIpList|sort -R|head -1)
+[[ -z "$LIF2_1_ADDR" ]] && LIF2_1_ADDR=$(freeIpList "${ExcludeIpList[@]}"|sort -R|head -1)
+ExcludeIpList+=($LIF2_1_ADDR)
 LIF2_1_MASK=$(getDefaultIp4Mask)
 LIF2_1_NODE=${cluster_name}-02
 LIF2_1_PORT=e0f
