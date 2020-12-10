@@ -138,6 +138,11 @@ bash ontap-simulator-in-kvm/$script "${optx[@]}" &> >(tee $ONTAP_INSTALL_LOG)
 
 tac $ONTAP_INSTALL_LOG | sed -nr '/^[ \t]+lif/ {:loop /\nfsqe-[s2]nc1/!{N; b loop}; p;q}' | tac >$ONTAP_IF_INFO
 
+################ Assert ################
+echo -e "Assert 1: ping $VM_EXT_IP ..."
+ping -c 4 $VM_EXT_IP || exit 1
+################ Assert ################
+
 #join host to ad domain(krb5 realm)
 echo -e "join host to $AD_DOMAIN($AD_HOSTNAME) ..."
 shorthostname=host-${HostIPSuffix}
@@ -152,6 +157,11 @@ nfsmp_krb5i=/mnt/nfsmp-ontap-krb5i
 nfsmp_krb5p=/mnt/nfsmp-ontap-krb5p
 eval $(< $ONTAP_ENV_FILE)
 clientip=$(getDefaultIp4 mv-ontap)
+
+################ Assert ################
+echo -e "Assert 2: ping $VM_EXT_IP ..."
+ping -c 4 $VM_EXT_IP || exit 1
+################ Assert ################
 
 run mkdir -p $nfsmp_krb5 $nfsmp_krb5i $nfsmp_krb5p
 run mount $NETAPP_NAS_HOSTNAME:$NETAPP_NFS_SHARE2 $nfsmp_krb5 -osec=krb5,clientaddr=$clientip
