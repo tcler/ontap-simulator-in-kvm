@@ -21,6 +21,26 @@ getDefaultIp4() {
 			awk '/inet .* global dynamic/{match($0,"inet ([0-9.]+)/[0-9]+",M); print M[1]}');
 	echo "$ret"
 }
+
+#-------------------------------------------------------------------------------
+KissVMUrl=https://github.com/tcler/kiss-vm-ns
+echo -e "installing kiss-vm ..."
+git config --global http.postBuffer 5242880000  #avoid git clone fail
+git clone --depth=1 "$KissVMUrl" && make -C kiss-vm-ns
+which vm || {
+	wget http://download.devel.redhat.com/qa/rhts/lookaside/kiss-vm-ns/kiss-vm
+	mv kiss-vm /usr/bin/vm && chmod +x /usr/bin/vm
+}
+which netns || {
+	wget http://download.devel.redhat.com/qa/rhts/lookaside/kiss-vm-ns/kiss-netns
+	mv kiss-netns /usr/bin/netns && chmod +x /usr/bin/netns
+}
+vm --prepare >/dev/null
+
+echo -e "creating macvlan if mv-ontap ..."
+netns host,mv-ontap,dhcp
+
+
 read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
 HostIPSuffix=$(printf %02x%02x $C $D)
 HostIPSuffixL=$(printf %02x%02x%02x%02x $A $B $C $D)
@@ -77,7 +97,6 @@ popd
 fi
 
 #-------------------------------------------------------------------------------
-KissVMUrl=https://github.com/tcler/kiss-vm-ns
 ImageUrl=ftp://fs-qe.usersys.redhat.com/pub/Netapp-Simulator/vsim-netapp-DOT9.7-cm_nodar.ova
 ImageUrl=http://download.devel.redhat.com/qa/rhts/lookaside/Netapp-Simulator/vsim-netapp-DOT9.7-cm_nodar.ova
 script=ontap-simulator-9.7-two-node.sh
@@ -93,14 +112,6 @@ ramsize=$(free -m|awk '/Mem:/{print $2}')
 	exit 1
 }
 
-echo -e "installing kiss-vm ..."
-git config --global http.postBuffer 5242880000  #avoid git clone fail
-git clone --depth=1 "$KissVMUrl" && make -C kiss-vm-ns
-which vm || {
-	wget http://download.devel.redhat.com/qa/rhts/lookaside/kiss-vm-ns/kiss-vm
-	mv kiss-vm /usr/bin/vm && chmod +x /usr/bin/vm
-}
-vm --prepare >/dev/null
 wget -c --progress=dot:giga "$ImageUrl"
 tar vxf vsim-netapp-DOT9.7-cm_nodar.ova
 for i in {1..4}; do
