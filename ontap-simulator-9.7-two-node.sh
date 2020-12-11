@@ -165,7 +165,7 @@ ping -c 4 $AD_IP || {
 		expect {password:} { send \"${AD_PASSWD}\\r\" }
 		expect {>} { send \"exit\\r\" }
 		expect eof
-		"
+		"  &>/dev/tty
 	}
 	exit 1
 }
