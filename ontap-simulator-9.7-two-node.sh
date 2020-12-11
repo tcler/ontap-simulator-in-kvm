@@ -156,8 +156,8 @@ freeIpList() {
 }
 ExcludeIpList=($AD_IP)
 
-######################## Assert ########################
-echo -e "Assert 1: ping windows AD server($AD_IP) ..."
+############################## Assert ##############################
+echo -e "Assert 1: ping windows AD server: $AD_IP ..." >/dev/tty
 ping -c 4 $AD_IP || {
 	[[ -n "$AD_IP_HOSTONLY" ]] && {
 		sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
@@ -169,7 +169,7 @@ ping -c 4 $AD_IP || {
 	}
 	exit 1
 }
-######################## Assert ########################
+############################## Assert ##############################
 
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
 dns_domain_names() { sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf; }
