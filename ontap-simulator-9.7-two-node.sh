@@ -699,6 +699,7 @@ SHARENAME2=cifs2
 [[ -n "$SSH_BIND_IP" ]] && SSH_BIND_OPT="-b $SSH_BIND_IP"
 
 if [[ -n "$AD_DOMAIN" ]]; then
+	echo -e "\033[1;30m=> Add dns entry for nas server($NAS_SERVER_NAME) in Windows AD($AD_DOMAIN) ...\033[0m"
 	expect -c "spawn ssh $SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
 	expect {password:} { send \"${AD_PASSWD}\\r\" }
 	expect {>} { send \"powershell\\r\" }
