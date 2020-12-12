@@ -698,7 +698,7 @@ SHARENAME2=cifs2
 
 [[ -n "$SSH_BIND_IP" ]] && SSH_BIND_OPT="-b $SSH_BIND_IP"
 
-[[ -n "$AD_DOMAIN" ]] && {
+if [[ -n "$AD_DOMAIN" ]]; then
 	expect -c "spawn ssh $SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
 	expect {password:} { send \"${AD_PASSWD}\\r\" }
 	expect {>} { send \"powershell\\r\" }
@@ -709,7 +709,7 @@ SHARENAME2=cifs2
         expect {>} { send \"exit\\r\" }
         expect eof
 	"
-}
+fi
 
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
