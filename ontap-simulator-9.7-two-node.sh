@@ -700,13 +700,10 @@ SHARENAME2=cifs2
 
 if [[ -n "$AD_DOMAIN" ]]; then
 	echo -e "\033[1;30m=> Add dns entry for nas server($NAS_SERVER_NAME) in Windows AD($AD_DOMAIN) ...\033[0m"
-	expect -c "spawn ssh $SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
+
+	sshOpts="$SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+	expect -c "spawn ssh $sshOpts $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP} powershell -Command 'Add-DnsServerResourceRecordA -Name $NAS_SERVER_NAME -ZoneName $AD_DOMAIN -AllowUpdateAny -IPv4Address $LIF1_1_ADDR'
 	expect {password:} { send \"${AD_PASSWD}\\r\" }
-	expect {>} { send \"powershell\\r\" }
-	expect {>} {
-		send \"Add-DnsServerResourceRecordA -Name "$NAS_SERVER_NAME" -ZoneName "$AD_DOMAIN" -AllowUpdateAny -IPv4Address '$LIF1_1_ADDR'\\r\"
-	}
-        expect {>} { send \"exit\\r\" }
         expect {>} { send \"exit\\r\" }
         expect eof
 	"
