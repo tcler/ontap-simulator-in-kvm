@@ -552,7 +552,6 @@ if [[ -n "$AD_DOMAIN" ]]; then
 	sshOpts="$SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 	expect -c "spawn ssh $sshOpts $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP} powershell -Command 'Add-DnsServerResourceRecordA -Name $NAS_SERVER_NAME -ZoneName $AD_DOMAIN -AllowUpdateAny -IPv4Address $LIF1_1_ADDR'
 	expect {password:} { send \"${AD_PASSWD}\\r\" }
-        expect {>} { send \"exit\\r\" }
         expect eof
 	"
 fi
