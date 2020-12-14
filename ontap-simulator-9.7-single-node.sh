@@ -293,7 +293,7 @@ vm -n $vmnode ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --disable-g
 	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2,cores=2
 
 read vncaddr <<<"$(vm vnc $vmnode)"
-vncaddr=${vncaddr/*:/localhost::}
+vncaddr=${vncaddr/:/::}
 [[ -z "$vncaddr" ]] && {
 	echo "{WARN}: something is wrong, exit ..." >&2
 	exit 1
