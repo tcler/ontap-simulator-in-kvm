@@ -319,7 +319,7 @@ vm -n $vmnode1 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --disable-
 	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2,cores=2
 
 read vncaddr <<<"$(vm vnc $vmnode1)"
-vncaddr=${vncaddr/:/::}
+vncaddr=${vncaddr/*:/localhost::}
 [[ -z "$vncaddr" ]] && {
 	echo "{WARN}: something is wrong, exit ..." >&2
 	exit 1
@@ -449,7 +449,7 @@ vm -n $vmnode2 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --disable-
 	--bus=ide --msize $((6*1024)) --cpus 2,cores=2 --vncput-after-install "x"
 
 read vncaddr <<<"$(vm vnc $vmnode2)"
-vncaddr=${vncaddr/:/::}
+vncaddr=${vncaddr/*:/localhost::}
 [[ -z "$vncaddr" ]] && {
 	echo "{WARN}: something is wrong, exit ..." >&2
 	exit 1
@@ -535,7 +535,7 @@ colorvncget $vncaddr
 idx=1
 for vmnode in $vmnode1 $vmnode2; do
 	read vncaddr <<<"$(vm vnc $vmnode)"
-	vncaddr=${vncaddr/:/::}
+	vncaddr=${vncaddr/*:/localhost::}
 	:; echo -e "\n\033[1;30m================================================================================\033[0m"
 	:; echo -e "\033[1;30m=> [$vmnode] Delete snapshots and add disk shelf ...\033[0m"
 	vncwait ${vncaddr} "^login:" 1
