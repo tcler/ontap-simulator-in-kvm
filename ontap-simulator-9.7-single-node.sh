@@ -140,7 +140,7 @@ freeIpList() {
 ExcludeIpList=($AD_IP)
 
 ############################## Assert ##############################
-echo -e "Assert 1: ping windows AD server: $AD_IP ..." >/dev/tty
+echo -e "Assert 1: ping windows AD server: $AD_IP ..."
 ping -c 4 $AD_IP || {
 	[[ -n "$AD_IP_HOSTONLY" ]] && {
 		sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
@@ -148,7 +148,7 @@ ping -c 4 $AD_IP || {
 		expect {password:} { send \"${AD_PASSWD}\\r\" }
 		expect {>} { send \"exit\\r\" }
 		expect eof
-		"  &>/dev/tty
+		"
 	}
 	exit 1
 }
