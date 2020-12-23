@@ -548,6 +548,7 @@ for vmnode in $vmnode1 $vmnode2; do
 	nodename=${cluster_name}-0$idx
 	diagpasswd=d1234567
 	expect -c "spawn ssh admin@$cluster_managementif_addr
+		set timeout 120
 		expect {Password:} { send \"${password}\\r\" }
 		expect {${cluster_name}::>} { send \"run -node ${nodename}\\r\" }
 		expect {${nodename}>} { send \"snap delete -a -f vol0\\r\" }
@@ -594,17 +595,37 @@ for vmnode in $vmnode1 $vmnode2; do
 	done
 	vncputln ${vncaddr} "exit"
 
+	let idx++
+done
+
+#don't do any pre-configuration after system initialization
+if [[ -n "$RAW" ]]; then
 	expect -c "spawn ssh admin@$cluster_managementif_addr
+		set timeout 120
+		expect {Password:} { send \"${password}\\r\" }
+		expect {${cluster_name}::>} { send \"aggr show\\r\" }
+		expect {${cluster_name}::>} { send \"vol show\\r\" }
+		expect {${cluster_name}::>} { send \"network port show\\r\" }
+		expect {${cluster_name}::>} { send \"network interface show\\r\" }
+		expect {${cluster_name}::>} { send \"exit\\r\" }
+		expect eof
+	"
+	exit
+fi
+
+for ((I=1; I < 2; I++)); do
+	nodename=${cluster_name}-0$I
+	expect -c "spawn ssh admin@$cluster_managementif_addr
+		set timeout 120
 		expect {Password:} { send \"${password}\\r\" }
 		expect {${cluster_name}::>} { send \"disk assign -all true -node ${nodename}\\r\" }
-		after 1000
 		expect {${cluster_name}::>} {
-			send \"aggr create -aggregate aggr${idx}_1 -node ${nodename} -disksize 9 -diskcount 28\\r\"
+			send \"aggr create -aggregate aggr${I}_1 -node ${nodename} -disksize 9 -diskcount 28\\r\"
 			send \"y\\r\"
 			expect {Job succeeded: DONE} {}
 		}
 		expect {${cluster_name}::>} {
-			send \"aggr create -aggregate aggr${idx}_2 -node ${nodename} -disksize 1 -diskcount 16\\r\"
+			send \"aggr create -aggregate aggr${I}_2 -node ${nodename} -disksize 1 -diskcount 16\\r\"
 			send \"y\\r\"
 			expect {Job succeeded: DONE} {}
 		}
@@ -614,22 +635,15 @@ for vmnode in $vmnode1 $vmnode2; do
 			send \"y\\r\"
 		}
 		expect {${cluster_name}::>} { send \"aggr show\\r\" }
-		after 1000
 		expect {${cluster_name}::>} { send \"vol modify -vserver ${nodename} -volume vol0 -size 4G\\r\" }
 		expect {${cluster_name}::>} { send \"exit\\r\" }
 		expect eof
 	"
-
-	let idx++
 done
-
-#don't do any pre-configuration after system initialization
-if [[ -n "$RAW" ]]; then
-	exit
-fi
 
 #LicenseCode=SMKQROWJNQYQSDAAAAAAAAAAAAAA,YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA,MHEYKUNFXMSMUCEZFAAAAAAAAAAA,ANGJKUNFXMSMUCEZFAAAAAAAAAAA
 expect -c "spawn ssh admin@$cluster_managementif_addr
+	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
 	expect {${cluster_name}::>} { send \"system license add -license-code $(sed -n '/^#LicenseCode=/{s/.*=//;p}' $0)\\r\" }
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }

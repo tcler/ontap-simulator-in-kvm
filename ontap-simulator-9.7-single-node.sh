@@ -414,6 +414,7 @@ vncwait ${vncaddr} "^login:" 1
 nodename=${cluster_name}-01
 diagpasswd=d1234567
 expect -c "spawn ssh admin@$cluster_managementif_addr
+	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
 	expect {${cluster_name}::>} { send \"run -node ${nodename}\\r\" }
 	expect {${nodename}>} { send \"snap delete -a -f vol0\\r\" }
@@ -462,14 +463,24 @@ vncputln ${vncaddr} "exit"
 
 #don't do any pre-configuration after system initialization
 if [[ -n "$RAW" ]]; then
+	expect -c "spawn ssh admin@$cluster_managementif_addr
+		set timeout 120
+		expect {Password:} { send \"${password}\\r\" }
+		expect {${cluster_name}::>} { send \"aggr show\\r\" }
+		expect {${cluster_name}::>} { send \"vol show\\r\" }
+		expect {${cluster_name}::>} { send \"network port show\\r\" }
+		expect {${cluster_name}::>} { send \"network interface show\\r\" }
+		expect {${cluster_name}::>} { send \"exit\\r\" }
+		expect eof
+	"
 	exit
 fi
 
 #LicenseCode=SMKQROWJNQYQSDAAAAAAAAAAAAAA,YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA
 expect -c "spawn ssh admin@$cluster_managementif_addr
+	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
 	expect {${cluster_name}::>} { send \"disk assign -all true -node ${nodename}\\r\" }
-	after 1000
 	expect {${cluster_name}::>} {
 		send \"aggr create -aggregate aggr1 -node ${nodename} -disksize 9 -diskcount 28\\r\"
 		send \"y\\r\"
@@ -486,7 +497,6 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"y\\r\"
 	}
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
-	after 1000
 	expect {${cluster_name}::>} { send \"vol modify -vserver ${nodename} -volume vol0 -size 4G\\r\" }
 
 	expect {${cluster_name}::>} { send \"system license add -license-code $(sed -n '/^#LicenseCode=/{s/.*=//;p}' $0)\\r\" }
