@@ -57,6 +57,7 @@ Usage() {
 	  --ad-admin <user>                  #Active Directory admin user name
 	  --ad-passwd <passwd>               #Active Directory admin password
 	  --ntp-server <addr>                #ntp server address
+	  --raw                              #Don't do any pre-configuration, after ONTAP cluster is initialized
 	EOF
 }
 
@@ -79,6 +80,7 @@ _at=`getopt -o h \
 	--long ad-admin: \
 	--long ad-passwd: \
 	--long ntp-server: \
+	--long raw \
     -a -n "$0" -- "$@"`
 [[ $? != 0 ]] && { exit 1; }
 eval set -- "$_at"
@@ -100,6 +102,7 @@ while true; do
 	--ad-admin)       AD_ADMIN=$2; shift 2;;
 	--ad-passwd)      AD_PASSWD=$2; shift 2;;
 	--ntp-server)     NTP_SERVER=$2; shift 2;;
+	--raw)            RAW=yes; shift 1;;
 	--) shift; break;;
 	esac
 done
@@ -619,6 +622,11 @@ for vmnode in $vmnode1 $vmnode2; do
 
 	let idx++
 done
+
+#don't do any pre-configuration after system initialization
+if [[ -n "$RAW" ]]; then
+	exit
+fi
 
 #LicenseCode=SMKQROWJNQYQSDAAAAAAAAAAAAAA,YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA,MHEYKUNFXMSMUCEZFAAAAAAAAAAA,ANGJKUNFXMSMUCEZFAAAAAAAAAAA
 expect -c "spawn ssh admin@$cluster_managementif_addr
