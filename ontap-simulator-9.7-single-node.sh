@@ -461,6 +461,17 @@ while true; do
 done
 vncputln ${vncaddr} "exit"
 
+expect -c "spawn ssh admin@$cluster_managementif_addr
+	set timeout 120
+	expect {Password:} { send \"${password}\\r\" }
+	expect {${cluster_name}::>} { send \"disk assign -all true -node ${nodename}\\r\" }
+	expect {${cluster_name}::>} {
+		send \"aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 9\\r\"
+		send \"y\\r\"
+		send \"y\\r\"
+	}
+"
+
 #don't do any pre-configuration after system initialization
 if [[ -n "$RAW" ]]; then
 	expect -c "spawn ssh admin@$cluster_managementif_addr
@@ -480,7 +491,6 @@ fi
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
-	expect {${cluster_name}::>} { send \"disk assign -all true -node ${nodename}\\r\" }
 	expect {${cluster_name}::>} {
 		send \"aggr create -aggregate aggr1 -node ${nodename} -disksize 9 -diskcount 28\\r\"
 		send \"y\\r\"
@@ -490,11 +500,6 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"aggr create -aggregate aggr2 -node ${nodename} -disksize 1 -diskcount 16\\r\"
 		send \"y\\r\"
 		expect {Job succeeded: DONE} {}
-	}
-	expect {${cluster_name}::>} {
-		send \"aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 9\\r\"
-		send \"y\\r\"
-		send \"y\\r\"
 	}
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
 	expect {${cluster_name}::>} { send \"vol modify -vserver ${nodename} -volume vol0 -size 4G\\r\" }
