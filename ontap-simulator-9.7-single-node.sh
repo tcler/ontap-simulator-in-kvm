@@ -466,7 +466,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {Password:} { send \"${password}\\r\" }
 	expect {${cluster_name}::>} { send \"disk assign -all true -node ${nodename}\\r\" }
 	expect {${cluster_name}::>} {
-		send \"aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 9\\r\"
+		send \"aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 5\\r\"
 		send \"y\\r\"
 		send \"y\\r\"
 	}
@@ -499,7 +499,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		expect {Job succeeded: DONE} {}
 	}
 	expect {${cluster_name}::>} {
-		send \"aggr create -aggregate aggr2 -node ${nodename} -disksize 1 -diskcount 16\\r\"
+		send \"aggr create -aggregate aggr2 -node ${nodename} -disksize 1 -diskcount 20\\r\"
 		send \"y\\r\"
 		expect {Job succeeded: DONE} {}
 	}
