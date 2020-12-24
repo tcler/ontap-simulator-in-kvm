@@ -548,12 +548,16 @@ VOL2_JUNCTION_PATH=/share2
 	read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
 	NAS_SERVER_NAME=ontap-$(printf %02x%02x $C $D)
 }
+NAS_SERVER_FQDN=$NAS_SERVER_NAME
 CIFS_WORKGROUP=${CIFS_WORKGROUP:-FSQE}
 LOCAL_USER=root
 LOCAL_USER_PASSWD=Sesame~0pen
 cifsOption="-workgroup $CIFS_WORKGROUP"
 AD_DOMAIN=${AD_NAME#*.}
-[[ -n "$AD_DOMAIN" ]] && cifsOption="-domain $AD_DOMAIN"
+[[ -n "$AD_DOMAIN" ]] && {
+	cifsOption="-domain $AD_DOMAIN"
+	NAS_SERVER_FQDN+=.${AD_DOMAIN}
+}
 AD_REALM=$(echo ${AD_NAME#*.} | tr [:lower:] [:upper:])
 AD_ADMIN=${AD_ADMIN:-administrator}
 AD_PASSWD=${AD_PASSWD:-fsqe2015!}
@@ -763,7 +767,7 @@ cifs_delete() {
 
 OntapInfo=/tmp/ontapinfo.env
 cat << EOF | tee $OntapInfo
-NETAPP_NAS_HOSTNAME=${NAS_SERVER_NAME}.${AD_DOMAIN}
+NETAPP_NAS_HOSTNAME=${NAS_SERVER_FQDN}
 NETAPP_NAS_IP=$LIF1_1_ADDR
 NETAPP_NAS_IP_LOC=$LIF1_0_ADDR
 NETAPP_NFS_SHARE=$VOL1_JUNCTION_PATH
