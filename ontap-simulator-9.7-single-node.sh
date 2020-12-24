@@ -470,6 +470,8 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"y\\r\"
 		send \"y\\r\"
 	}
+	expect {${cluster_name}::>} { send \"exit\\r\" }
+	expect eof
 "
 
 #don't do any pre-configuration after system initialization

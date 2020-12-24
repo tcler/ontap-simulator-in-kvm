@@ -609,6 +609,8 @@ for ((I=1; I < 2; I++)); do
 			send \"y\\r\"
 			send \"y\\r\"
 		}
+		expect {${cluster_name}::>} { send \"exit\\r\" }
+		expect eof
 	"
 done
 
