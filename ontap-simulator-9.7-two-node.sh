@@ -598,7 +598,7 @@ for vmnode in $vmnode1 $vmnode2; do
 	let idx++
 done
 
-for ((I=1; I < 2; I++)); do
+for ((I=1; I <= 2; I++)); do
 	nodename=${cluster_name}-0$I
 	expect -c "spawn ssh admin@$cluster_managementif_addr
 		set timeout 120
@@ -629,7 +629,7 @@ if [[ -n "$RAW" ]]; then
 	exit
 fi
 
-for ((I=1; I < 2; I++)); do
+for ((I=1; I <= 2; I++)); do
 	nodename=${cluster_name}-0$I
 	expect -c "spawn ssh admin@$cluster_managementif_addr
 		set timeout 120
