@@ -270,9 +270,20 @@ vncwait() {
 	local pattern="$2"
 	local tim=${3:-1}
 	local ignored_charset="$4"
+	local maxloop=60
+	local loop=0
 
 	echo -e "\n=> waiting: \033[1;36m$pattern\033[0m prompt ..."
-	while true; do vncget $addr | ocrgrep "$pattern" "$ignored_charset" && break; sleep $tim; done
+	while true; do
+		vncget $addr | ocrgrep "$pattern" "$ignored_charset" && break
+		sleep $tim
+		let loop++
+		if [[ $loop = $maxloop ]]; then
+			echo "{WARN}: vncwait has been waiting for more than $(bc <<< "600*$tim") seconds"
+			vncget $addr
+			loop=0
+		fi
+	done
 }
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
