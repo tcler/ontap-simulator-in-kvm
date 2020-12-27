@@ -481,6 +481,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"y\\r\"
 		send \"y\\r\"
 	}
+	expect {${cluster_name}::>} { send \"vol modify -vserver ${nodename} -volume vol0 -size 4G\\r\" }
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
 "
@@ -515,7 +516,6 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		expect {Job succeeded: DONE} {}
 	}
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
-	expect {${cluster_name}::>} { send \"vol modify -vserver ${nodename} -volume vol0 -size 4G\\r\" }
 
 	expect {${cluster_name}::>} { send \"system license add -license-code $(sed -n '/^#LicenseCode=/{s/.*=//;p}' $0)\\r\" }
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
