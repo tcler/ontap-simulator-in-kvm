@@ -590,6 +590,7 @@ for vmnode in $vmnode1 $vmnode2; do
 		expect {${nodename}%} { send \"exit\\r\" }
 		expect {${cluster_name}::*>} { send \"system node reboot -node ${nodename} -ignore-quorum-warnings\\r\" }
 		expect {Are you sure you want to reboot node} { send \"y\\r\"}
+		set timeout 10
 		expect eof
 	"
 

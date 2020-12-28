@@ -456,6 +456,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {${nodename}%} { send \"exit\\r\" }
 	expect {${cluster_name}::*>} { send \"system node reboot -node ${nodename}\\r\" }
 	expect {Are you sure you want to reboot node} { send \"y\\r\"}
+	set timeout 10
 	expect eof
 "
 
