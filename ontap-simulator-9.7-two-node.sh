@@ -163,15 +163,19 @@ ExcludeIpList=($AD_IP)
 if [[ -n "$AD_IP" ]]; then
 	echo -e "Assert 1: ping windows AD server: $AD_IP ..."
 	ping -c 4 $AD_IP || {
-		[[ -n "$AD_IP_HOSTONLY" ]] && {
+		if [[ -n "$AD_IP_HOSTONLY" ]]; then
 			sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-			expect -c "spawn ssh $sshOpt $AD_ADMIN@${AD_IP_HOSTONLY} ipconfig
+			ipinfo=$(expect -c "spawn ssh $sshOpt $AD_ADMIN@${AD_IP_HOSTONLY} ipconfig
 			expect {password:} { send \"${AD_PASSWD}\\r\" }
 			expect {>} { send \"exit\\r\" }
 			expect eof
-			"
-		}
-		ping -c 4 $AD_IP_HOSTONLY || exit 1
+			")
+			if ! grep "\<$AD_IP\>" <<<"$ipinfo"; then
+				exit 1
+			fi
+		else
+			exit 1
+		fi
 	}
 fi
 ############################## Assert ##############################
