@@ -154,7 +154,7 @@ if [[ -n "$AD_IP" ]]; then
 			expect eof
 			"
 		}
-		exit 1
+		ping -c 4 $AD_IP_HOSTONLY || exit 1
 	}
 fi
 ############################## Assert ##############################
