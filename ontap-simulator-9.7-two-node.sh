@@ -740,7 +740,7 @@ CIFSVOL1=cifsvol1
 CIFSVOL1_AGGR=aggr1_1
 CIFSVOL1_SIZE=60G
 CIFSVOL1_PATH=/cifs1
-SHARENAME=cifs1
+SHARENAME1=cifs1
 
 CIFSVOL2=cifsvol2
 CIFSVOL2_AGGR=aggr2_1
@@ -850,7 +850,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"cifs security modify -is-aes-encryption-enabled true -vserver $VS\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"vserver cifs share create -share-name $SHARENAME -vserver $VS -path $CIFSVOL1_PATH\\r\"
+		send \"vserver cifs share create -share-name $SHARENAME1 -vserver $VS -path $CIFSVOL1_PATH\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"vserver cifs share create -share-name $SHARENAME2 -vserver $VS -path $CIFSVOL2_PATH\\r\"
@@ -949,7 +949,7 @@ NETAPP_NAS_IP=$LIF1_1_ADDR
 NETAPP_NAS_IP_LOC=$LIF1_0_ADDR
 NETAPP_NFS_SHARE=$VOL1_JUNCTION_PATH
 NETAPP_NFS_SHARE2=$VOL2_JUNCTION_PATH
-NETAPP_CIFS_SHARE=$SHARENAME
+NETAPP_CIFS_SHARE=$SHARENAME1
 NETAPP_CIFS_SHARE2=$SHARENAME2
 NETAPP_CIFS_USER=$LOCAL_USER
 NETAPP_CIFS_PASSWD=$LOCAL_USER_PASSWD
