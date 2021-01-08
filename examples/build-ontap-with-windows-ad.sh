@@ -102,7 +102,7 @@ ImageUrl=http://download.devel.redhat.com/qa/rhts/lookaside/Netapp-Simulator/vsi
 script=ontap-simulator-9.7-two-node.sh
 minram=$((15*1024))
 singlenode=$1
-[[ -n "$singlenode" ]] && {
+[[ "$singlenode" = [sy]* ]] && {
 	shift
 	script=ontap-simulator-9.7-single-node.sh
 	minram=$((8*1024 - 512))
