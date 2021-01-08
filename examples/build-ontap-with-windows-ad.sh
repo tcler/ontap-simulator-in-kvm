@@ -101,7 +101,8 @@ ImageUrl=ftp://fs-qe.usersys.redhat.com/pub/Netapp-Simulator/vsim-netapp-DOT9.7-
 ImageUrl=http://download.devel.redhat.com/qa/rhts/lookaside/Netapp-Simulator/vsim-netapp-DOT9.7-cm_nodar.ova
 script=ontap-simulator-9.7-two-node.sh
 minram=$((15*1024))
-[[ "$1" = s* ]] && {
+singlenode=$1
+[[ -n "$singlenode" ]] && {
 	shift
 	script=ontap-simulator-9.7-single-node.sh
 	minram=$((8*1024 - 512))
