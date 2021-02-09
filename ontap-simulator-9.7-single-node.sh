@@ -97,6 +97,9 @@ mkdir -p $Rundir
 clean() { rm -rf $Rundir; }
 trap "clean" EXIT
 
+# install dependency
+yum install -y ipcalc
+
 getIp4() {
 	local ret
 	local nic=$1
