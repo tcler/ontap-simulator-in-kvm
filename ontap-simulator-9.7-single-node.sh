@@ -153,8 +153,6 @@ if [[ -n "$AD_IP" ]]; then
 			sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 			ipinfo=$(expect -c "spawn ssh $sshOpt $AD_ADMIN@${AD_IP_HOSTONLY} ipconfig
 			expect {password:} { send \"${AD_PASSWD}\\r\" }
-			expect {>} { send \"exit\\r\" }
-			expect eof
 			")
 			if ! grep "\<$AD_IP\>" <<<"$ipinfo"; then
 				exit 1
