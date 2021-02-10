@@ -97,8 +97,13 @@ popd
 fi
 
 #-------------------------------------------------------------------------------
-ImageUrl=ftp://fs-qe.usersys.redhat.com/pub/Netapp-Simulator/vsim-netapp-DOT9.7-cm_nodar.ova
-ImageUrl=http://download.devel.redhat.com/qa/rhts/lookaside/Netapp-Simulator/vsim-netapp-DOT9.7-cm_nodar.ova
+protocol=http
+address=download.devel.red hat.com
+path=qa/rh ts/look aside/Netapp-Simulator
+BaseUrl=${protocol// /}:${address// /}/${path// /}
+
+ImageUrl=${BaseUrl}/vsim-netapp-DOT9.7-cm_nodar.ova
+LicenseFileUrl=${BaseUrl}/CMode_licenses_9.7.txt
 script=ontap-simulator-9.7-two-node.sh
 minram=$((15*1024))
 singlenode=$1
@@ -118,6 +123,8 @@ tar vxf vsim-netapp-DOT9.7-cm_nodar.ova
 for i in {1..4}; do
 	qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2
 done
+
+wget -c --progress=dot:giga "$LicenseFileUrl"
 
 echo -e "installing ontap-simulator-in-kvm tool ..."
 git clone --depth=1 https://github.com/tcler/ontap-simulator-in-kvm

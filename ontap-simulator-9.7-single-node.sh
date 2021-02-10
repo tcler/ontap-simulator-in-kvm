@@ -31,6 +31,7 @@ Usage() {
 
 	Options:
 	  -h, --help                         #Display this help.
+	  --license-file <path>              #specify the license file path, default ./CMode_licenses_9.7.txt
 	  --dnsaddrs <ip[,ip2]>              #e.g: 192.168.10.1 or 192.168.1.1,192.168.2.1
 	  --dnsdomains <domain1[,domain2]>   #e.g: test.a.com or test.a.com,devel.a.com
 	  --node-pubaddr <ip>                #node management address for public access
@@ -52,6 +53,7 @@ Usage() {
 
 _at=`getopt -o h \
 	--long help \
+	--license-file: \
 	--long dnsaddrs: \
 	--long dnsdomains: \
 	--long node-pubaddr: \
@@ -72,6 +74,7 @@ eval set -- "$_at"
 while true; do
 	case "$1" in
 	-h|--help) Usage; shift 1; exit 0;;
+	--license-file)   LicenseFile=$2; shift 2;;
 	--dnsaddrs)       DNS_ADDRS=$2; shift 2;;
 	--dnsdomains)     DNS_DOMAINS=$2; shift 2;;
 	--node-pubaddr)   node_managementif_addr=$2; shift 2;;
@@ -96,6 +99,12 @@ Rundir=/tmp/ontap-simulator-s-$$
 mkdir -p $Rundir
 clean() { rm -rf $Rundir; }
 trap "clean" EXIT
+
+LicenseFile=CMode_licenses_9.7.txt
+if [[ ! -f $LicenseFile ]]; then
+	echo "{WARN} license file '${LicenseFile}' does not exist." >&2
+	exit 1
+fi
 
 # install dependency
 yum install -y ipcalc
@@ -507,7 +516,9 @@ if [[ -n "$RAW" ]]; then
 	exit
 fi
 
-#LicenseCode=SMKQROWJNQYQSDAAAAAAAAAAAAAA,YVUCRRRRYVHXCFABGAAAAAAAAAAA,MBXNQRRRYVHXCFABGAAAAAAAAAAA
+BaseLicense=$(awk '/Cluster Base license/ {print $NF}' $LicenseFile)
+FirstNodeLicenses=$(awk '$2 ~ /^[A-Z]{28}$/ && $2 ~ /ABG/ {print $2}' $LicenseFile | paste -sd,)
+LicenseList=$BaseLicense,$FirstNodeLicenses
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
@@ -523,7 +534,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
 
-	expect {${cluster_name}::>} { send \"system license add -license-code $(sed -n '/^#LicenseCode=/{s/.*=//;p}' $0)\\r\" }
+	expect {${cluster_name}::>} { send \"system license add -license-code $LicenseList' $0)\\r\" }
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
 	expect {${cluster_name}::>} { send \"vol show\\r\" }
 	expect {${cluster_name}::>} { send \"network port show\\r\" }
