@@ -499,8 +499,8 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	while 1 {
 		expect {${cluster_name}::>} { send \"aggr show\\r\" }
 		expect {
-			{*MB} { sleep 2; continue }
 			{*GB} break
+			{*MB} { sleep 2; continue }
 		}
 	}
 	expect {${cluster_name}::>} { send \"vol modify -vserver ${nodename} -volume vol0 -size 4G\\r\" }
