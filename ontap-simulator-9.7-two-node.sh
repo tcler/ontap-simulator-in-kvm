@@ -635,7 +635,13 @@ for ((I=1; I <= 2; I++)); do
 			send \"y\\r\"
 			send \"y\\r\"
 		}
-		expect {${cluster_name}::>} { send \"aggr show\\r\" }
+		while 1 {
+			expect {${cluster_name}::>} { send \"aggr show\\r\" }
+			expect {
+				{*MB} { sleep 1; continue }
+				{*GB} break
+			}
+		}
 		expect {${cluster_name}::>} { send \"vol modify -vserver ${nodename} -volume vol0 -size 4G\\r\" }
 		expect {${cluster_name}::>} { send \"exit\\r\" }
 		expect eof
