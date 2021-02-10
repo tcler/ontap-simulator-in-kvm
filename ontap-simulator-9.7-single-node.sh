@@ -516,7 +516,7 @@ if [[ -n "$RAW" ]]; then
 	exit
 fi
 
-BaseLicense=$(awk '/Cluster Base license/ {print $NF}' $LicenseFile)
+BaseLicense=$(awk 'BEGIN{RS="[\x0d\x0a\x0d]"} /Cluster Base license/ {printf $NF}' $LicenseFile)
 FirstNodeLicenses=$(awk '$2 ~ /^[A-Z]{28}$/ && $2 ~ /ABG/ {print $2}' $LicenseFile | paste -sd,)
 LicenseList=$BaseLicense,$FirstNodeLicenses
 expect -c "spawn ssh admin@$cluster_managementif_addr
@@ -534,7 +534,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
 
-	expect {${cluster_name}::>} { send \"system license add -license-code $LicenseList' $0)\\r\" }
+	expect {${cluster_name}::>} { send \"system license add -license-code $LicenseList\\r\" }
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
 	expect {${cluster_name}::>} { send \"vol show\\r\" }
 	expect {${cluster_name}::>} { send \"network port show\\r\" }
