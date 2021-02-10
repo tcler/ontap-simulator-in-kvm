@@ -153,8 +153,6 @@ ping -c 4 $VM_EXT_IP || {
 		sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 		expect -c "spawn ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
 		expect {password:} { send \"${AD_PASSWD}\\r\" }
-		expect {>} { send \"exit\\r\" }
-		expect eof
 		"  &>/dev/tty
 	}
 	exit 1
@@ -183,8 +181,6 @@ ping -c 4 $VM_EXT_IP || {
 		sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
 		expect -c "spawn ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
 		expect {password:} { send \"${AD_PASSWD}\\r\" }
-		expect {>} { send \"exit\\r\" }
-		expect eof
 		"  &>/dev/tty
 	}
 	exit 1
