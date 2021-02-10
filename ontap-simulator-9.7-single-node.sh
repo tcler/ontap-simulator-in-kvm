@@ -499,7 +499,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	while 1 {
 		expect {${cluster_name}::>} { send \"aggr show\\r\" }
 		expect {
-			{*MB} { sleep 1; continue }
+			{*MB} { sleep 2; continue }
 			{*GB} break
 		}
 	}
