@@ -66,7 +66,7 @@ Usage() {
 
 _at=`getopt -o h \
 	--long help \
-	--license-file: \
+	--long license-file: \
 	--long dnsaddrs: \
 	--long dnsdomains: \
 	--long node1-pubaddr: \
