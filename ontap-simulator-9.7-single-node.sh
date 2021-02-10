@@ -487,17 +487,18 @@ while true; do
 done
 vncputln ${vncaddr} "exit"
 
+aggr0name=aggr0_${nodename//-/_}
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
 	expect {${cluster_name}::>} { send \"disk assign -all true -node ${nodename}\\r\" }
 	expect {${cluster_name}::>} {
-		send \"aggr add-disks -aggregate aggr0_${nodename//-/_} -diskcount 5\\r\"
+		send \"aggr add-disks -aggregate $aggr0name -diskcount 5\\r\"
 		send \"y\\r\"
 		send \"y\\r\"
 	}
 	while 1 {
-		expect {${cluster_name}::>} { send \"aggr show\\r\" }
+		expect {${cluster_name}::>} { send \"aggr show -aggregate $aggr0name -fields size\\r\" }
 		expect {
 			{*GB} break
 			{*MB} { sleep 2; continue }
