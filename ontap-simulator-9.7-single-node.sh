@@ -644,6 +644,9 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"volume create -volume $VOL2 -aggregate $VOL2_AGGR -size $VOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW -snapshot-policy default -foreground true -tiering-policy none -vserver $VS -junction-path $VOL2_JUNCTION_PATH -policy $PolicyName -group 0 -user 0\\r\"
 	}
 	expect {${cluster_name}::>} {
+		send \"network port broadcast-domain show\\r\"
+	}
+	expect {${cluster_name}::>} {
 		send \"network interface create -vserver $VS -lif $LIF1_0_NAME -service-policy default-data-files -role data -data-protocol nfs,cifs,fcache -address $LIF1_0_ADDR -netmask $LIF1_0_MASK -home-node $LIF1_0_NODE -home-port $LIF1_0_PORT -status-admin up -failover-policy system-defined -firewall-policy data -auto-revert true -failover-group Default\\r\"
 	}
 	expect {${cluster_name}::>} {
