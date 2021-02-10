@@ -97,10 +97,10 @@ popd
 fi
 
 #-------------------------------------------------------------------------------
-protocol=http
-address=download.devel.red hat.com
-path=qa/rh ts/look aside/Netapp-Simulator
-BaseUrl=${protocol// /}:${address// /}/${path// /}
+protocol="http"
+address="download.devel.red hat.com"
+path="qa/rh ts/look aside/Netapp-Simulator"
+BaseUrl=${protocol// /}://${address// /}/${path// /}
 
 ImageUrl=${BaseUrl}/vsim-netapp-DOT9.7-cm_nodar.ova
 LicenseFileUrl=${BaseUrl}/CMode_licenses_9.7.txt
