@@ -334,7 +334,7 @@ dns_domains=$(echo "${dns_domains}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$2,$3}
 
 dns_addrs=$(dns_addrs)
 [[ -n "$DNS_ADDRS" && $dns_addrs != ${DNS_ADDRS},* ]] && dns_addrs=${DNS_ADDRS},${dns_addrs}
-dns_addrs=$(echo "${DNS_ADDRS},${dns_addrs}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$3,$3} else print}')
+dns_addrs=$(echo "${dns_addrs}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$3,$3} else print}')
 
 read controller_located _ < <(hostname -A)
 
