@@ -26,15 +26,12 @@ getDefaultIp4() {
 KissVMUrl=https://github.com/tcler/kiss-vm-ns
 echo -e "installing kiss-vm ..."
 git config --global http.postBuffer 5242880000  #avoid git clone fail
-git clone --depth=1 "$KissVMUrl" && make -C kiss-vm-ns
-which vm || {
-	wget http://download.devel.redhat.com/qa/rhts/lookaside/kiss-vm-ns/kiss-vm
-	mv kiss-vm /usr/bin/vm && chmod +x /usr/bin/vm
-}
-which netns || {
-	wget http://download.devel.redhat.com/qa/rhts/lookaside/kiss-vm-ns/kiss-netns
-	mv kiss-netns /usr/bin/netns && chmod +x /usr/bin/netns
-}
+while true: do
+	git clone --depth=1 "$KissVMUrl" && make -C kiss-vm-ns
+	which vm && which netns && break
+	sleep 5
+	echo -e "{warn} installing kiss-vm  fail, try again ..."
+done
 vm --prepare >/dev/null
 
 echo -e "creating macvlan if mv-host ..."
@@ -102,8 +99,10 @@ address="download.devel.red hat.com"
 path="qa/rh ts/look aside/Netapp-Simulator"
 BaseUrl=${protocol// /}://${address// /}/${path// /}
 
-ImageUrl=${BaseUrl}/vsim-netapp-DOT9.7-cm_nodar.ova
-LicenseFileUrl=${BaseUrl}/CMode_licenses_9.7.txt
+ovaImage=vsim-netapp-DOT9.7-cm_nodar.ova
+licenseFile=CMode_licenses_9.7.txt
+ImageUrl=${BaseUrl}/$ovaImage
+LicenseFileUrl=${BaseUrl}/$licenseFile
 script=ontap-simulator-two-node.sh
 minram=$((15*1024))
 singlenode=$1
@@ -142,7 +141,7 @@ optx=(--ntp-server=$NTP_SERVER --dnsdomains=$DNS_DOMAIN --dnsaddrs=$DNS_ADDR \
 	--ad-admin=$AD_ADMIN --ad-passwd=$AD_PASS --ad-ip-hostonly "${VM_INT_IP}")
 ONTAP_INSTALL_LOG=/tmp/ontap2-install.log
 ONTAP_IF_INFO=/tmp/ontap2-if-info.txt
-bash ontap-simulator-in-kvm/$script "${optx[@]}" &> >(tee $ONTAP_INSTALL_LOG)
+bash ontap-simulator-in-kvm/$script --license-file $licenseFile "${optx[@]}" &> >(tee $ONTAP_INSTALL_LOG)
 
 tac $ONTAP_INSTALL_LOG | sed -nr '/^[ \t]+lif/ {:loop /\nfsqe-[s2]nc1/!{N; b loop}; p;q}' | tac >$ONTAP_IF_INFO
 
