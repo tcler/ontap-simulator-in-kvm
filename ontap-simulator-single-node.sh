@@ -524,8 +524,10 @@ if [[ -n "$RAW" ]]; then
 	exit
 fi
 
-BaseLicense=$(awk 'BEGIN{RS="[\x0d\x0a\x0d]"} /Cluster Base license/ {printf $NF}' $LicenseFile)
-FirstNodeLicenses=$(awk '$2 ~ /^[A-Z]{28}$/ && $2 ~ /ABG/ {print $2}' $LicenseFile | paste -sd,)
+getBaseLicense() { local lf=$1; awk 'BEGIN{RS="[\x0d\x0a\x0d]"} /Cluster Base license/ {printf $NF}' $lf; }
+getFirstNodeLicenses() { local lf=$1; awk '$2 ~ /^[A-Z]{28}$/ && $2 ~ /ABG/ {print $2}' $lf | paste -sd,; }
+BaseLicense=$(getBaseLicense $LicenseFile)
+FirstNodeLicenses=$(getFirstNodeLicenses $LicenseFile)
 LicenseList=$BaseLicense,$FirstNodeLicenses
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
