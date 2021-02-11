@@ -104,12 +104,12 @@ BaseUrl=${protocol// /}://${address// /}/${path// /}
 
 ImageUrl=${BaseUrl}/vsim-netapp-DOT9.7-cm_nodar.ova
 LicenseFileUrl=${BaseUrl}/CMode_licenses_9.7.txt
-script=ontap-simulator-9.7-two-node.sh
+script=ontap-simulator-two-node.sh
 minram=$((15*1024))
 singlenode=$1
 [[ "$singlenode" = [sy]* ]] && {
 	shift
-	script=ontap-simulator-9.7-single-node.sh
+	script=ontap-simulator-single-node.sh
 	minram=$((8*1024 - 512))
 }
 ramsize=$(free -m|awk '/Mem:/{print $2}')

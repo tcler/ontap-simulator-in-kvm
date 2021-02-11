@@ -27,9 +27,9 @@ done
 ```
 git clone https://github.com/tcler/ontap-simulator-in-kvm
 
-bash ontap-simulator-in-kvm/ontap-simulator-9.7-single-node.sh  #deploy a single node ontap cluster
+bash ontap-simulator-in-kvm/ontap-simulator-single-node.sh  #deploy a single node ontap cluster
 #or
-bash ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh     #deploy a two node ontap cluster
+bash ontap-simulator-in-kvm/ontap-simulator-two-node.sh     #deploy a two node ontap cluster
 ```
 
 ### more examples
@@ -45,13 +45,13 @@ AD_IP=${VM_EXT_IP}
 AD_ADMIN=${ADMINUSER}
 AD_PASS=${ADMINPASSWORD}
 
-time ontap-simulator-in-kvm/ontap-simulator-9.7-single-node.sh \
+time ontap-simulator-in-kvm/ontap-simulator-single-node.sh \
   --node-pubaddr 10.66.61.3 --lif-pubaddr 10.66.61.6 \
   --ntp-server=$NTP_SERVER --dnsdomains=$DNS_DOMAIN --dnsaddrs=$DNS_ADDR \
   --ad-hostname=$AD_HOSTNAME --ad-ip=$AD_IP \
   --ad-admin=$AD_ADMIN --ad-passwd=$AD_PASS --ad-ip-hostonly "${VM_INT_IP}"
 
-time ontap-simulator-in-kvm/ontap-simulator-9.7-two-node.sh \
+time ontap-simulator-in-kvm/ontap-simulator-two-node.sh \
   --node1-pubaddr 10.66.60.66 --node2-pubaddr 10.66.60.77 \
   --lif1-pubaddr 10.66.60.89 --lif2-pubaddr 10.66.60.174 \
   --ntp-server=$NTP_SERVER --dnsdomains=$DNS_DOMAIN --dnsaddrs=$DNS_ADDR \
