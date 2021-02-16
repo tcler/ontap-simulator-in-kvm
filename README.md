@@ -1,5 +1,9 @@
 # ontap-simulator-in-kvm
 show how to install and configure ONTAP simulator in KVM automatically
+```
+Netapp officially only supports the installation of ONTAP simulator with VMware, 
+but this requires a lot of manual operations and cannot be automated.
+```
 
 ### verified host OS list
 Fedora-32, Fedora-33, RHEL-8.2.0, RHEL-8.3.0, RHEL-7.8, RHEL-7.9
