@@ -34,8 +34,8 @@ while true; do
 done
 vm --prepare >/dev/null
 
-echo -e "creating macvlan if mv-host ..."
-netns host,mv-host,dhcp
+echo -e "creating macvlan if mv-host-pub ..."
+netns host,mv-host-pub,dhcp
 
 
 read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
@@ -171,7 +171,7 @@ nfsmp_krb5=/mnt/nfsmp-ontap-krb5
 nfsmp_krb5i=/mnt/nfsmp-ontap-krb5i
 nfsmp_krb5p=/mnt/nfsmp-ontap-krb5p
 eval $(< $ONTAP_ENV_FILE)
-clientip=$(getDefaultIp4 mv-host)
+clientip=$(getDefaultIp4 mv-host-pub)
 
 ################################# Assert ################################
 echo -e "Assert 2: ping windows ad server: $VM_EXT_IP ..." >/dev/tty
