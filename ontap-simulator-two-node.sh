@@ -948,7 +948,10 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	}
 	expect {${cluster_name}::>} {
 		send \"kerberos interface enable -lif $LIF2_1_NAME -admin-username ${AD_ADMIN} -spn nfs/${NAS_SERVER_NAME}.${AD_DOMAIN}@${AD_REALM}\\r\"
-		expect {Password:} { send \"${AD_PASSWD}\\r\" }
+		expect {
+			{Password:} { send \"${AD_PASSWD}\\r\" }
+			{${cluster_name}::>} { send \"\\r\" }
+		}
 	}
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
