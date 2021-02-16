@@ -26,7 +26,7 @@ getDefaultIp4() {
 KissVMUrl=https://github.com/tcler/kiss-vm-ns
 echo -e "installing kiss-vm ..."
 git config --global http.postBuffer 5242880000  #avoid git clone fail
-while true: do
+while true; do
 	git clone --depth=1 "$KissVMUrl" && make -C kiss-vm-ns
 	which vm && which netns && break
 	sleep 5
