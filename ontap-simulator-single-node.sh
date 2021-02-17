@@ -624,6 +624,7 @@ if [[ -n "$AD_DOMAIN" ]]; then
 	expect {password:} { send \"${AD_PASSWD}\\r\" }
         expect eof
 	"
+	ping -c 8 $NAS_SERVER_NAME
 fi
 
 expect -c "spawn ssh admin@$cluster_managementif_addr
