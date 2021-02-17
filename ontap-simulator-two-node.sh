@@ -1,5 +1,5 @@
 #!/bin/bash
-#install and configure two inode cluster with ontap simulator 9.7
+#install and configure two inode cluster with ontap simulator 9.7/9.8
 
 #                                                        |
 #                                                        |
@@ -42,7 +42,7 @@ Usage() {
 
 	Options:
 	  -h, --help                         #Display this help.
-	  --license-file <path>              #specify the license file path, default ./CMode_licenses_9.7.txt
+	  --license-file <path>              #specify the license file path, default ./CMode_licenses_9.8.txt
 	  --dnsaddrs <ip[,ip2]>              #e.g: 192.168.10.1 or 192.168.1.1,192.168.2.1
 	  --dnsdomains <domain1[,domain2]>   #e.g: test.a.com or test.a.com,devel.a.com
 	  --node1-pubaddr <ip>               #node1 management address for public access
@@ -117,7 +117,7 @@ mkdir -p $Rundir
 clean() { rm -rf $Rundir; }
 trap "clean" EXIT
 
-LicenseFile=CMode_licenses_9.7.txt
+LicenseFile=CMode_licenses_9.8.txt
 if [[ ! -f $LicenseFile ]]; then
 	echo "{WARN} license file '${LicenseFile}' does not exist." >&2
 	exit 1

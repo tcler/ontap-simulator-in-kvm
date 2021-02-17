@@ -99,8 +99,8 @@ address="download.devel.red hat.com"
 path="qa/rh ts/look aside/Netapp-Simulator"
 BaseUrl=${protocol// /}://${address// /}/${path// /}
 
-ovaImage=vsim-netapp-DOT9.7-cm_nodar.ova
-licenseFile=CMode_licenses_9.7.txt
+ovaImage=vsim-netapp-DOT9.8-cm_nodar.ova
+licenseFile=CMode_licenses_9.8.txt
 ImageUrl=${BaseUrl}/$ovaImage
 LicenseFileUrl=${BaseUrl}/$licenseFile
 script=ontap-simulator-two-node.sh
@@ -118,7 +118,7 @@ ramsize=$(free -m|awk '/Mem:/{print $2}')
 }
 
 wget -c --progress=dot:giga "$ImageUrl"
-tar vxf vsim-netapp-DOT9.7-cm_nodar.ova
+tar vxf vsim-netapp-DOT9.8-cm_nodar.ova
 for i in {1..4}; do
 	qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2
 done

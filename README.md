@@ -22,10 +22,10 @@ git clone --depth=1 https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns
 # download url: https://mysupport.netapp.com/site/tools/tool-eula/simulate-ontap
 # note: need log in to the NetApp Support Site athttp://mysupport-beta.netapp.com/ before download
 # ls -1 *.ova *.txt
-#CMode_licenses_9.7.txt
-#vsim-netapp-DOT9.7-cm_nodar.ova
+#CMode_licenses_9.8.txt
+#vsim-netapp-DOT9.8-cm_nodar.ova
 
-tar vxf vsim-netapp-DOT9.7-cm_nodar.ova
+tar vxf vsim-netapp-DOT9.8-cm_nodar.ova
 for i in {1..4}; do
     qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2
 done
@@ -33,7 +33,7 @@ done
 
 ### run the automation script
 ```
-licenseFile=CMode_licenses_9.7.txt
+licenseFile=CMode_licenses_9.8.txt
 git clone https://github.com/tcler/ontap-simulator-in-kvm
 
 bash ontap-simulator-in-kvm/ontap-simulator-single-node.sh --license-file $licenseFile #deploy a single node ontap cluster
@@ -54,7 +54,7 @@ AD_IP=${VM_EXT_IP}
 AD_ADMIN=${ADMINUSER}
 AD_PASS=${ADMINPASSWORD}
 
-licenseFile=CMode_licenses_9.7.txt
+licenseFile=CMode_licenses_9.8.txt
 
 time ontap-simulator-in-kvm/ontap-simulator-single-node.sh \
   --license-file $licenseFile \
