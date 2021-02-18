@@ -798,20 +798,6 @@ SHARENAME2=cifs2
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
 #ref3: https://tcler.github.io/2017/08/24/NetApp-pnfs-mds-ds-config
 
-[[ -n "$SSH_BIND_IP" ]] && SSH_BIND_OPT="-b $SSH_BIND_IP"
-
-if [[ -n "$AD_DOMAIN" ]]; then
-	echo -e "\033[1;30m=> Add dns entry for nas server($NAS_SERVER_NAME) in Windows AD($AD_DOMAIN) ...\033[0m"
-
-	sshOpts="$SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-	expect -c "spawn ssh $sshOpts $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP} powershell -Command 'Add-DnsServerResourceRecordA -Name $NAS_SERVER_NAME -ZoneName $AD_DOMAIN -AllowUpdateAny -IPv4Address $LIF1_1_ADDR'
-	expect {password:} { send \"${AD_PASSWD}\\r\" }
-        expect eof
-	"
-	host $NAS_SERVER_NAME $AD_IP_HOSTONLY
-	host $NAS_SERVER_NAME $AD_IP
-fi
-
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} {
@@ -943,6 +929,17 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 "
 
 [[ -n "$AD_DOMAIN" ]] && {
+	[[ -n "$SSH_BIND_IP" ]] && SSH_BIND_OPT="-b $SSH_BIND_IP"
+
+	echo -e "\033[1;30m=> Add dns entry for nas server($NAS_SERVER_NAME) in Windows AD($AD_DOMAIN) ...\033[0m"
+	sshOpts="$SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+	expect -c "spawn ssh $sshOpts $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP} powershell -Command 'Add-DnsServerResourceRecordA -Name $NAS_SERVER_NAME -ZoneName $AD_DOMAIN -AllowUpdateAny -IPv4Address $LIF1_1_ADDR'
+	expect {password:} { send \"${AD_PASSWD}\\r\" }
+        expect eof
+	"
+	host $NAS_SERVER_NAME $AD_IP_HOSTONLY
+	host $NAS_SERVER_NAME $AD_IP
+
 	LogOutPut=$(expect -c "spawn ssh admin@$cluster_managementif_addr
 		set timeout 120
 		expect {Password:} { send \"${password}\\r\" }
