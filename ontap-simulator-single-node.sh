@@ -320,7 +320,8 @@ vm net | grep -w $netdata >/dev/null || vm netstart $netdata
 vm -n $vmnode ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --disable-guest-hypv \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netdata,e1000  --net=$netdata,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
-	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2,cores=2
+	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2,cores=2 \
+	--vncput-after-install key:enter
 
 read vncaddr <<<"$(vm vnc $vmnode)"
 vncaddr=${vncaddr/:/::}
@@ -329,8 +330,12 @@ vncaddr=${vncaddr/:/::}
 	exit 1
 }
 
-vncwait ${vncaddr} "Hit [Enter] to boot immediately" 0.5
-vncputln ${vncaddr}
+echo; expect -c "spawn virsh console $vmnode
+	set timeout 120
+	expect {
+		-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
+		{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
+	}"
 
 vncwait ${vncaddr} "^login:" 5
 [[ -z "$node_managementif_addr" ]] &&
@@ -344,8 +349,12 @@ vncputln ${vncaddr} "reboot"
 vncwait ${vncaddr} "Are you sure you want to reboot node.*? {y|n}:" 5
 vncputln ${vncaddr} "y"
 
-vncwait ${vncaddr} "Hit [Enter] to boot immediately" 5
-vncputln ${vncaddr}
+echo; expect -c "spawn virsh console $vmnode
+	set timeout 120
+	expect {
+		-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
+		{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
+	}"
 
 : <<'COMM'
 vncwait ${vncaddr} "Press Ctrl-C for Boot Menu." 5
@@ -360,8 +369,12 @@ vncputln ${vncaddr} "yes"
 vncwait ${vncaddr} "This will erase all the data on the disks, are you sure?" 5
 vncputln ${vncaddr} "yes"
 
-vncwait ${vncaddr} "Hit [Enter] to boot immediately" 5
-vncputln ${vncaddr}
+echo; expect -c "spawn virsh console $vmnode
+	set timeout 120
+	expect {
+		-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
+		{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
+	}"
 COMM
 
 vncwait ${vncaddr} "Type yes to confirm and continue {yes}:" 10
@@ -474,8 +487,12 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect eof
 "
 
-vncwait ${vncaddr} "Hit [Enter] to boot immediately" 0.5
-vncputln ${vncaddr}
+echo; expect -c "spawn virsh console $vmnode
+	set timeout 120
+	expect {
+		-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
+		{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
+	}"
 vncwait ${vncaddr} "^login:" 1
 vncputln ${vncaddr} "admin"
 vncputln ${vncaddr} "${password}"
