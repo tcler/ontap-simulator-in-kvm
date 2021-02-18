@@ -331,7 +331,7 @@ vncaddr=${vncaddr/:/::}
 }
 
 echo; expect -c "spawn virsh console $vmnode
-	set timeout 120
+	set timeout 8
 	expect {
 		-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
 		{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
