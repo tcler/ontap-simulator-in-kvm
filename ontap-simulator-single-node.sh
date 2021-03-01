@@ -177,8 +177,8 @@ getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
 dns_domain_names() { sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf; }
 dns_addrs() {
 	if grep -q 127.0.0.53 /etc/resolv.conf; then
-		systemd-resolve --status -4 $(getDefaultNic) | sed 's/:/:\n/' |
-			sed -n '/^ *DNS Servers:/,/^ *DNS/ {/DNS.*:/d; s/ //g; p}' | paste -sd ,;
+		systemd-resolve --status -4 $(getDefaultNic) | sed 's/: */:\n/' |
+			sed -n '/^ *DNS Servers:/,/^ *DNS/ {/DNS.*:/d; s/ /\n/g; p}' | paste -sd ,;
 	else
 		sed -rn '/^nameserver */{s///; s/ *#.*$//; p}' /etc/resolv.conf | paste -sd ,;
 	fi
