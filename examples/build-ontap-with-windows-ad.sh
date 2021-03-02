@@ -190,6 +190,7 @@ echo -e "\nhostname -A ..."
 hostname -A
 
 echo -e "\nnfs mount test ..."
+hostname $netbiosname  #required by nfs krb5 mount
 run mkdir -p $nfsmp_krb5 $nfsmp_krb5i $nfsmp_krb5p
 run mount $NETAPP_NAS_HOSTNAME:$NETAPP_NFS_SHARE2 $nfsmp_krb5 -osec=krb5,clientaddr=$clientip
 run mount $NETAPP_NAS_HOSTNAME:$NETAPP_NFS_SHARE2 $nfsmp_krb5i -osec=krb5i,clientaddr=$clientip
