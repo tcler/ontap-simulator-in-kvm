@@ -23,11 +23,10 @@ getDefaultIp4() {
 }
 
 #-------------------------------------------------------------------------------
-KissVMUrl=https://github.com/tcler/kiss-vm-ns
 echo -e "installing kiss-vm ..."
-git config --global http.postBuffer 5242880000  #avoid git clone fail
+KissUrl=https://github.com/tcler/kiss-vm-ns
 while true; do
-	git clone --depth=1 "$KissVMUrl" && make -C kiss-vm-ns
+	git clone --depth=1 "$KissUrl" && make -C kiss-vm-ns
 	which vm && which netns && break
 	sleep 5
 	echo -e "{warn} installing kiss-vm  fail, try again ..."
@@ -72,7 +71,8 @@ fi
 wget -cq $img_url -O $img_path
 
 echo -e "downloading make-windows-vm tool ..."
-git clone https://github.com/tcler/make-windows-vm.git
+_url=https://github.com/tcler/make-windows-vm
+while git clone $_url; do [[ -d make-windows-vm ]] && break || sleep 5; done
 osvariants=$(virt-install --os-variant list 2>/dev/null) || {
 	osvariants=$(osinfo-query os)
 }
@@ -126,7 +126,8 @@ done
 wget -c --progress=dot:giga "$LicenseFileUrl"
 
 echo -e "installing ontap-simulator-in-kvm tool ..."
-git clone --depth=1 https://github.com/tcler/ontap-simulator-in-kvm
+_url=https://github.com/tcler/ontap-simulator-in-kvm
+while git clone --depth=1 $_url; do [[ -d ontap-simulator-in-kvm ]] && break || sleep 5; done
 
 eval $(< /tmp/${WinVmName}.env)
 NTP_SERVER=10.5.26.10
