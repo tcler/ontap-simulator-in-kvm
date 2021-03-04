@@ -72,7 +72,7 @@ wget -cq $img_url -O $img_path
 
 echo -e "downloading make-windows-vm tool ..."
 _url=https://github.com/tcler/make-windows-vm
-while git clone $_url; do [[ -d make-windows-vm ]] && break || sleep 5; done
+while ! git clone $_url; do [[ -d make-windows-vm ]] && break || sleep 5; done
 osvariants=$(virt-install --os-variant list 2>/dev/null) || {
 	osvariants=$(osinfo-query os)
 }
@@ -127,7 +127,7 @@ wget -c --progress=dot:giga "$LicenseFileUrl"
 
 echo -e "installing ontap-simulator-in-kvm tool ..."
 _url=https://github.com/tcler/ontap-simulator-in-kvm
-while git clone --depth=1 $_url; do [[ -d ontap-simulator-in-kvm ]] && break || sleep 5; done
+while ! git clone --depth=1 $_url; do [[ -d ontap-simulator-in-kvm ]] && break || sleep 5; done
 
 eval $(< /tmp/${WinVmName}.env)
 NTP_SERVER=10.5.26.10
