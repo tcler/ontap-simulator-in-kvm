@@ -27,11 +27,12 @@ P=${0##*/}
 Usage() {
 	cat <<-EOF
 	Usage:
-	  $P [OPTIONs]
+	  $P --image <image-file> --license-file <license-file> [otherOPTIONs]
 
 	Options:
 	  -h, --help                         #Display this help.
-	  --license-file <path>              #specify the license file path, default ./CMode_licenses_9.8.txt
+	  --image <path>                     #specify image(ova) file path; e.g: --image=/path/vsim-netapp-DOT9.8-cm_nodar.ova
+	  --license-file <path>              #specify the license file path; e.g: --license-file=/path/CMode_licenses_9.8.txt
 	  --dnsaddrs <ip[,ip2]>              #e.g: 192.168.10.1 or 192.168.1.1,192.168.2.1
 	  --dnsdomains <domain1[,domain2]>   #e.g: test.a.com or test.a.com,devel.a.com
 	  --node-pubaddr <ip>                #node management address for public access
@@ -53,6 +54,7 @@ Usage() {
 
 _at=`getopt -o h \
 	--long help \
+	--long image: \
 	--long license-file: \
 	--long dnsaddrs: \
 	--long dnsdomains: \
@@ -74,6 +76,7 @@ eval set -- "$_at"
 while true; do
 	case "$1" in
 	-h|--help) Usage; shift 1; exit 0;;
+	--image)          ImageFile=$2; shift 2;;
 	--license-file)   LicenseFile=$2; shift 2;;
 	--dnsaddrs)       DNS_ADDRS=$2; shift 2;;
 	--dnsdomains)     DNS_DOMAINS=$2; shift 2;;
@@ -100,11 +103,24 @@ mkdir -p $Rundir
 clean() { rm -rf $Rundir; }
 trap "clean" EXIT
 
-LicenseFile=CMode_licenses_9.8.txt
+if [[ -z "$ImageFile" || -z "$LicenseFile" ]]; then
+	Usage >&2
+	exit 1
+fi
+if [[ ! -f "$ImageFile" ]]; then
+	echo "{WARN} image file '${ImageFile}' does not exist." >&2
+	exit 1
+fi
 if [[ ! -f $LicenseFile ]]; then
 	echo "{WARN} license file '${LicenseFile}' does not exist." >&2
 	exit 1
 fi
+
+#convert image file to qcow2 files
+tar vxf $ImageFile || exit 1
+for i in {1..4}; do
+    qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2
+done
 
 # install dependency
 yum install -y ipcalc
