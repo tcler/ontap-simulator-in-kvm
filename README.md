@@ -17,28 +17,24 @@ git clone --depth=1 https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns
 #*2. if you are non-root user, open new terminal and continue
 ```
 
-### download ONTAP simulator image and license file, and convert image file to qcow2
+### download ONTAP simulator image and license file
 ```
 # download url: https://mysupport.netapp.com/site/tools/tool-eula/simulate-ontap
 # note: need log in to the NetApp Support Site athttp://mysupport-beta.netapp.com/ before download
 # ls -1 *.ova *.txt
 #CMode_licenses_9.8.txt
 #vsim-netapp-DOT9.8-cm_nodar.ova
-
-tar vxf vsim-netapp-DOT9.8-cm_nodar.ova
-for i in {1..4}; do
-    qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2
-done
 ```
 
 ### run the automation script
 ```
+imageFile=vsim-netapp-DOT9.8-cm_nodar.ova
 licenseFile=CMode_licenses_9.8.txt
 git clone https://github.com/tcler/ontap-simulator-in-kvm
 
-bash ontap-simulator-in-kvm/ontap-simulator-single-node.sh --license-file $licenseFile #deploy a single node ontap cluster
+bash ontap-simulator-in-kvm/ontap-simulator-single-node.sh --image $imageFile --license-file $licenseFile #deploy a single node ontap cluster
 #or
-bash ontap-simulator-in-kvm/ontap-simulator-two-node.sh --license-file $licenseFile    #deploy a two node ontap cluster
+bash ontap-simulator-in-kvm/ontap-simulator-two-node.sh --image $imageFile --license-file $licenseFile    #deploy a two node ontap cluster
 ```
 
 ### more examples
@@ -55,8 +51,10 @@ AD_ADMIN=${ADMINUSER}
 AD_PASS=${ADMINPASSWORD}
 
 licenseFile=CMode_licenses_9.8.txt
+imageFile=vsim-netapp-DOT9.8-cm_nodar.ova
 
 time ontap-simulator-in-kvm/ontap-simulator-single-node.sh \
+  --image $imageFile \
   --license-file $licenseFile \
   --node-pubaddr 10.66.61.3 --lif-pubaddr 10.66.61.6 \
   --ntp-server=$NTP_SERVER --dnsdomains=$DNS_DOMAIN --dnsaddrs=$DNS_ADDR \
@@ -64,6 +62,7 @@ time ontap-simulator-in-kvm/ontap-simulator-single-node.sh \
   --ad-admin=$AD_ADMIN --ad-passwd=$AD_PASS --ad-ip-hostonly "${VM_INT_IP}"
 
 time ontap-simulator-in-kvm/ontap-simulator-two-node.sh \
+  --image $imageFile \
   --license-file $licenseFile \
   --node1-pubaddr 10.66.60.66 --node2-pubaddr 10.66.60.77 \
   --lif1-pubaddr 10.66.60.89 --lif2-pubaddr 10.66.60.174 \

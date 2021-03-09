@@ -118,11 +118,6 @@ ramsize=$(free -m|awk '/Mem:/{print $2}')
 }
 
 wget -c --progress=dot:giga "$ImageUrl"
-tar vxf vsim-netapp-DOT9.8-cm_nodar.ova
-for i in {1..4}; do
-	qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2
-done
-
 wget -c --progress=dot:giga "$LicenseFileUrl"
 
 echo -e "installing ontap-simulator-in-kvm tool ..."
@@ -142,7 +137,7 @@ optx=(--ntp-server=$NTP_SERVER --dnsdomains=$DNS_DOMAIN --dnsaddrs=$DNS_ADDR \
 	--ad-admin=$AD_ADMIN --ad-passwd=$AD_PASS --ad-ip-hostonly "${VM_INT_IP}")
 ONTAP_INSTALL_LOG=/tmp/ontap2-install.log
 ONTAP_IF_INFO=/tmp/ontap2-if-info.txt
-bash ontap-simulator-in-kvm/$script --license-file $licenseFile "${optx[@]}" &> >(tee $ONTAP_INSTALL_LOG)
+bash ontap-simulator-in-kvm/$script --image $ovaImage --license-file $licenseFile "${optx[@]}" &> >(tee $ONTAP_INSTALL_LOG)
 
 tac $ONTAP_INSTALL_LOG | sed -nr '/^[ \t]+lif/ {:loop /\nfsqe-[s2]nc1/!{N; b loop}; p;q}' | tac >$ONTAP_IF_INFO
 
