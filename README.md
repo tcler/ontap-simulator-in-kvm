@@ -22,8 +22,8 @@ git clone --depth=1 https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns
 # download url: https://mysupport.netapp.com/site/tools/tool-eula/simulate-ontap
 # note: need log in to the NetApp Support Site athttp://mysupport-beta.netapp.com/ before download
 # ls -1 *.ova *.txt
-#CMode_licenses_9.8.txt
-#vsim-netapp-DOT9.8-cm_nodar.ova
+CMode_licenses_9.8.txt
+vsim-netapp-DOT9.8-cm_nodar.ova
 ```
 
 ### run the automation script
