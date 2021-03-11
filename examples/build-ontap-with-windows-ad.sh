@@ -37,6 +37,12 @@ echo -e "creating macvlan if mv-host-pub ..."
 netns host,mv-host-pub,dhcp
 
 
+#-------------------------------------------------------------------------------
+protocol="http"
+address="download.devel.red hat.com"
+basepath="qa/rh ts/look aside/"
+BaseUrl=${protocol// /}://${address// /}/${basepath// /}
+
 read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
 HostIPSuffix=$(printf %02x%02x $C $D)
 HostIPSuffixL=$(printf %02x%02x%02x%02x $A $B $C $D)
@@ -52,6 +58,8 @@ img_name=Win2016-Evaluation.iso
 os_variant=win2k16
 
 download_path=/home/download
+openssh_url="$BaseUrl/windows-images/OpenSSH-Win64.zip"
+img_url="$BaseUrl/windows-images/$img_name"
 
 echo -e "installing dependency ..."
 yum install -y libvirt libvirt-client virt-install virt-viewer qemu-kvm dosfstools \
@@ -61,13 +69,6 @@ mkdir -p $download_path
 img_path="$download_path/$img_name"
 
 echo -e "downloading image $img_name ..."
-if [[ "$HOSTNAME" = *pek2.redhat.com ]]; then
-	img_url="ftp://fs-qe.usersys.redhat.com/pub/windows-images/$img_name"
-	openssh_url=ftp://fs-qe.usersys.redhat.com/pub/windows-images/OpenSSH-Win64.zip
-else
-	img_url="http://download.devel.redhat.com/qa/rhts/lookaside/windows-images/$img_name"
-	openssh_url="http://download.devel.redhat.com/qa/rhts/lookaside/windows-images/OpenSSH-Win64.zip"
-fi
 wget -cq $img_url -O $img_path
 
 echo -e "downloading make-windows-vm tool ..."
@@ -94,15 +95,11 @@ popd
 fi
 
 #-------------------------------------------------------------------------------
-protocol="http"
-address="download.devel.red hat.com"
-path="qa/rh ts/look aside/Netapp-Simulator"
-BaseUrl=${protocol// /}://${address// /}/${path// /}
-
+pdir="Netapp-Simulator"
 ovaImage=vsim-netapp-DOT9.8-cm_nodar.ova
 licenseFile=CMode_licenses_9.8.txt
-ImageUrl=${BaseUrl}/$ovaImage
-LicenseFileUrl=${BaseUrl}/$licenseFile
+ImageUrl=${BaseUrl}/$pdir/$ovaImage
+LicenseFileUrl=${BaseUrl}/$pdir/$licenseFile
 script=ontap-simulator-two-node.sh
 minram=$((15*1024))
 singlenode=$1
