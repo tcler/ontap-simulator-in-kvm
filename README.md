@@ -5,19 +5,21 @@ Netapp officially only supports the installation of ONTAP simulator with VMware,
 but this requires a lot of manual operations and cannot be automated.
 ```
 
-### verified host OS list
-Fedora-32, Fedora-33, RHEL-8.2.0, RHEL-8.3.0, RHEL-7.8, RHEL-7.9
+# platform requires
+In order to run this script correctly, you need a PC or laptop with 16G RAM, and the OS shoud be CentOS-7/RHEL-7/Fedora-30 or higher  
+(verified on Fedora-32, Fedora-33, RHEL-8.2.0, RHEL-8.3.0, RHEL-7.8, RHEL-7.9)
 
-### dependent packages install
+# software requires
+You also need to install [kiss-vm-ns](https://github.com/tcler/kiss-vm-ns) in advance:
 ```
 #1. kiss-vm
-git config http.postBuffer 524288000   #avoid git clone fail
 git clone --depth=1 https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns; sudo vm --prepare
 
 #*2. if you are non-root user, open new terminal and continue
 ```
 
-### download ONTAP simulator image and license file
+# usage/steps
+## download ONTAP simulator image and license file
 ```
 # download url: https://mysupport.netapp.com/site/tools/tool-eula/simulate-ontap
 # note: need log in to the NetApp Support Site athttp://mysupport-beta.netapp.com/ before download
@@ -26,7 +28,7 @@ CMode_licenses_9.8.txt
 vsim-netapp-DOT9.8-cm_nodar.ova
 ```
 
-### run the automation script
+## run the automation script
 ```
 imageFile=vsim-netapp-DOT9.8-cm_nodar.ova
 licenseFile=CMode_licenses_9.8.txt
@@ -37,7 +39,7 @@ bash ontap-simulator-in-kvm/ontap-simulator-single-node.sh --image $imageFile --
 bash ontap-simulator-in-kvm/ontap-simulator-two-node.sh --image $imageFile --license-file $licenseFile    #deploy a two node ontap cluster
 ```
 
-### more examples
+## more examples
 ```
 #install windows ad VM by using https://github.com/tcler/make-windows-vm
 
