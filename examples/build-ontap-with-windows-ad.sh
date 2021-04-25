@@ -31,7 +31,7 @@ while true; do
 	sleep 5
 	echo -e "{warn} installing kiss-vm  fail, try again ..."
 done
-vm --prepare >/dev/null
+vm prepare >/dev/null
 
 echo -e "creating macvlan if mv-host-pub ..."
 netns host,mv-host-pub,dhcp
