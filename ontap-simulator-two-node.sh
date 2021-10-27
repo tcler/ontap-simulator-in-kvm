@@ -217,24 +217,38 @@ dns_addrs() {
 	fi
 }
 
-ConvertCmd="gm convert"
-if ! which gm &>/dev/null; then
-	if ! which convert &>/dev/null; then
-		echo "{WARN} command gm or convert are needed" >&2
-		exit 1
+image_binarize() {
+	local srcf=${1}
+	local dstf=${2:-new-${srcf}}
+
+	if command -v anytopnm >/dev/null; then
+		anytopnm $srcf | ppmtopgm | pgmtopbm -threshold > $dstf
 	else
-		ConvertCmd=convert
+		local ConvertCmd="gm convert"
+		! command -v gm >/dev/null && {
+			if ! command -v convert >/dev/null; then
+				echo "{VM:WARN} command gm or convert are needed by 'vncget' function!" >&2
+				return 1
+			else
+				ConvertCmd=convert
+			fi
+		}
+		$ConvertCmd $srcf -threshold 30% $dstf
 	fi
-fi
+
+	return 0
+}
+
 if ! which gocr &>/dev/null; then
 	echo "{WARN} command gocr is needed" >&2
 	exit 1
 fi
+
 vncget() {
 	local _vncaddr=$1
 	[[ -z "$_vncaddr" ]] && return 1
 	vncdo -s ${_vncaddr} capture $Rundir/_screen.png
-	$ConvertCmd $Rundir/_screen.png  -threshold 30%  $Rundir/_screen2.png
+	image_binarize $Rundir/_screen.png $Rundir/_screen2.png || return 1
 	gocr -i $Rundir/_screen2.png 2>/dev/null
 }
 colorvncget() { vncget "$@" | GREP_COLORS='ms=01;30;47' grep --color .; }
