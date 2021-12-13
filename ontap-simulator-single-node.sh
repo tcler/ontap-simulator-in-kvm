@@ -123,7 +123,9 @@ for i in {1..4}; do
 done
 
 # install dependency
-yum install -y ipcalc
+command -v ipcalc || {
+	sudo yum install -y ipcalc
+}
 
 getIp4() {
 	local ret
