@@ -336,11 +336,11 @@ vncwait() {
 :; echo -e "\033[1;30m=> creating networks ...\033[0m"
 netcluster=ontap2-ci  #e0a e0b
 vm netcreate netname=$netcluster brname=br-ontap2-ci forward=
-vm net | grep -w $netcluster >/dev/null || vm netstart $netcluster
+vm netls | grep -w $netcluster >/dev/null || vm netstart $netcluster
 
 netdata=ontap2-data  #e0d #e0e
 vm netcreate netname=$netdata brname=br-ontap2-data subnet=20
-vm net | grep -w $netdata >/dev/null || vm netstart $netdata
+vm netls | grep -w $netdata >/dev/null || vm netstart $netdata
 
 #===============================================================================
 #cluster
