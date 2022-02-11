@@ -35,6 +35,7 @@ vm prepare >/dev/null
 
 echo -e "creating macvlan if mv-host-pub ..."
 netns host,mv-host-pub,dhcp
+ip a s dev mv-host-pub
 
 
 #-------------------------------------------------------------------------------
