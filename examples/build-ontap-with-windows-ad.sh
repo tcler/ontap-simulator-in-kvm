@@ -89,9 +89,15 @@ opts=(--vm-name ${WinVmName} --os-variant $os_variant --disk-size 50 \
 	--image $img_path --openssh=$openssh_url \
 	--enable-kdc --domain ${ADDomain} -p ${ADPasswd} --force --timeout 180)
 pushd make-windows-vm
-echo "./make-win-vm.sh answerfiles-cifs-nfs/* ${opts[@]}"
-./make-win-vm.sh answerfiles-cifs-nfs/* "${opts[@]}"
+echo "./make-win-vm.sh AnswerFileTemplates/cifs-nfs/* ${opts[@]}"
+./make-win-vm.sh AnswerFileTemplates/cifs-nfs/* "${opts[@]}"
 popd
+
+eval $(< /tmp/${WinVmName}.env)
+[[ -z "$VM_INT_IP" || -z "$VM_EXT_IP" ]] && {
+	echo "{ERROR} VM_INT_IP($VM_INT_IP) or VM_EXT_IP($VM_EXT_IP) of Windows VM is nil"
+	exit 1
+}
 
 fi
 
@@ -144,9 +150,10 @@ echo -e "Assert 1: ping windows ad server: $VM_EXT_IP ..." >/dev/tty
 ping -c 4 $VM_EXT_IP || {
 	[[ -n "$VM_INT_IP" ]] && {
 		sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-		expect -c "spawn ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
+		expect -c "set timeout 120
+		spawn ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
 		expect {password:} { send \"${AD_PASSWD}\\r\" }
-		"  &>/dev/tty
+		"
 	}
 	exit 1
 }
@@ -172,9 +179,10 @@ echo -e "Assert 2: ping windows ad server: $VM_EXT_IP ..." >/dev/tty
 ping -c 4 $VM_EXT_IP || {
 	[[ -n "$VM_INT_IP" ]] && {
 		sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-		expect -c "spawn ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
+		expect -c "set timeout 120
+		spawn ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
 		expect {password:} { send \"${AD_PASSWD}\\r\" }
-		"  &>/dev/tty
+		"
 	}
 	exit 1
 }
