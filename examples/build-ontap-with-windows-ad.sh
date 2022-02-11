@@ -185,7 +185,7 @@ ping -c 4 $VM_EXT_IP || {
 		expect {password:} { send \"${AD_PASSWD}\\r\" }
 		"
 	}
-	echo -e "Alert 1: ping windows ad server($VM_EXT_IP) fail"
+	echo -e "Alert 2: ping windows ad server($VM_EXT_IP) fail"
 	exit 1
 }
 ################################# Assert ################################
