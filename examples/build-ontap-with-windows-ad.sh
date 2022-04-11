@@ -63,7 +63,7 @@ img_url="$BaseUrl/windows-images/$img_name"
 ADDomain=fsqe${HostIPSuffix}.redhat.com
 ADPasswd=Sesame~0pen
 vm create Windows-server -n ${WinVmName} -C $img_url --osv=$os_variant --dsize 50 \
-	--win-auto=cifs-nfs --win-enable-kdc --win-ssh=$openssh_url \
+	--win-auto=cifs-nfs --win-enable-kdc --win-openssh=$openssh_url \
 	--win-domain=${ADDomain} --win-passwd=${ADPasswd} --force --wait
 eval $(< /tmp/${WinVmName}.env)
 [[ -z "$VM_INT_IP" || -z "$VM_EXT_IP" ]] && {
