@@ -58,41 +58,13 @@ WINVER=2016
 img_name=Win2016-Evaluation.iso
 os_variant=win2k16
 
-download_path=/home/download
 openssh_url="$BaseUrl/windows-images/OpenSSH-Win64.zip"
 img_url="$BaseUrl/windows-images/$img_name"
-
-echo -e "installing dependency ..."
-yum install -y libvirt libvirt-client virt-install virt-viewer qemu-kvm dosfstools \
-    openldap-clients dos2unix unix2dos glibc-common expect wget
-
-mkdir -p $download_path
-img_path="$download_path/$img_name"
-
-echo -e "downloading image $img_name ..."
-wget -cq $img_url -O $img_path
-
-echo -e "downloading make-windows-vm tool ..."
-_url=https://github.com/tcler/make-windows-vm
-while ! git clone $_url; do [[ -d make-windows-vm ]] && break || sleep 5; done
-osvariants=$(virt-install --os-variant list 2>/dev/null) || {
-	osvariants=$(osinfo-query os)
-}
-grep " $os_variant" <<<"$osvariants" || {
-	os_variant=$(egrep -o 'win2k12r2|win2k12|win2k16|win2k19|win2k8' <<<"$osvariants"|head -n1)
-}
-
-echo -e "openssh_url=$openssh_url\nimage_url=$img_url"
 ADDomain=fsqe${HostIPSuffix}.redhat.com
 ADPasswd=Sesame~0pen
-opts=(--vm-name ${WinVmName} --os-variant $os_variant --disk-size 50 \
-	--image $img_path --openssh=$openssh_url \
-	--enable-kdc --domain ${ADDomain} -p ${ADPasswd} --force --timeout 180)
-pushd make-windows-vm
-echo "./make-win-vm.sh AnswerFileTemplates/cifs-nfs/* ${opts[@]}"
-./make-win-vm.sh AnswerFileTemplates/cifs-nfs/* "${opts[@]}"
-popd
-
+vm create Windows-server -n ${WinVmName} -C $img_url --osv=$os_variant --dsize 50 \
+	--win-auto=cifs-nfs --win-enable-kdc --win-ssh=$openssh_url \
+	--win-domain=${ADDomain} --win-passwd=${ADPasswd} --force --wait
 eval $(< /tmp/${WinVmName}.env)
 [[ -z "$VM_INT_IP" || -z "$VM_EXT_IP" ]] && {
 	echo "{ERROR} VM_INT_IP($VM_INT_IP) or VM_EXT_IP($VM_EXT_IP) of Windows VM is nil"
@@ -166,7 +138,7 @@ netbiosname=host-${HostIPSuffix}
  echo "$netbiosname $HOSTNAME" >/etc/host.aliases
  echo "export HOSTALIASES=/etc/host.aliases" >>/etc/profile
  source /etc/profile
-./make-windows-vm/utils/config_ad_client.sh --addc_ip $VM_INT_IP --addc_ip_ext $VM_EXT_IP -p $AD_PASS --config_krb --enctypes AES --host-netbios $netbiosname
+config_ad_client.sh --addc_ip $VM_INT_IP --addc_ip_ext $VM_EXT_IP -p $AD_PASS --config_krb --enctypes AES --host-netbios $netbiosname
 
 ONTAP_ENV_FILE=/tmp/ontap2info.env
 nfsmp_krb5=/mnt/nfsmp-ontap-krb5
