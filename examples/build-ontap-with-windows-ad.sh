@@ -138,7 +138,7 @@ netbiosname=host-${HostIPSuffix}
  echo "$netbiosname $HOSTNAME" >/etc/host.aliases
  echo "export HOSTALIASES=/etc/host.aliases" >>/etc/profile
  source /etc/profile
-config_ad_client.sh --addc_ip $VM_INT_IP --addc_ip_ext $VM_EXT_IP -p $AD_PASS --config_krb --enctypes AES --host-netbios $netbiosname
+config-ad-client.sh --addc_ip $VM_INT_IP --addc_ip_ext $VM_EXT_IP -p $AD_PASS --config_krb --enctypes AES --host-netbios $netbiosname
 
 ONTAP_ENV_FILE=/tmp/ontap2info.env
 nfsmp_krb5=/mnt/nfsmp-ontap-krb5
