@@ -65,7 +65,7 @@ ADPasswd=Sesame~0pen
 vm create Windows-server -n ${WinVmName} -C $img_url --osv=$os_variant --dsize 50 \
 	--win-auto=cifs-nfs --win-enable-kdc --win-openssh=$openssh_url \
 	--win-domain=${ADDomain} --win-passwd=${ADPasswd} --force --wait
-eval $(< /tmp/${WinVmName}.env)
+eval "$(< /tmp/${WinVmName}.env)"
 [[ -z "$VM_INT_IP" || -z "$VM_EXT_IP" ]] && {
 	echo "{ERROR} VM_INT_IP($VM_INT_IP) or VM_EXT_IP($VM_EXT_IP) of Windows VM is nil"
 	exit 1
