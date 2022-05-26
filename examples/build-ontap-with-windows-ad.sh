@@ -122,10 +122,7 @@ echo -e "Assert 1: ping windows ad server: $VM_EXT_IP ..." >/dev/tty
 ping -c 4 $VM_EXT_IP || {
 	[[ -n "$VM_INT_IP" ]] && {
 		sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-		expect -c "set timeout 120
-		spawn ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
-		expect {password:} { send \"${AD_PASSWD}\\r\" }
-		"
+		ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
 	}
 	echo -e "Alert 1: ping windows ad server($VM_EXT_IP) fail"
 	exit 1
@@ -152,10 +149,7 @@ echo -e "Assert 2: ping windows ad server: $VM_EXT_IP ..." >/dev/tty
 ping -c 4 $VM_EXT_IP || {
 	[[ -n "$VM_INT_IP" ]] && {
 		sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-		expect -c "set timeout 120
-		spawn ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
-		expect {password:} { send \"${AD_PASSWD}\\r\" }
-		"
+		ssh $sshOpt $AD_ADMIN@${VM_INT_IP} ipconfig
 	}
 	echo -e "Alert 2: ping windows ad server($VM_EXT_IP) fail"
 	exit 1
