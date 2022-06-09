@@ -41,9 +41,15 @@ bash ontap-simulator-in-kvm/ontap-simulator-two-node.sh --image $imageFile --lic
 
 ## more examples
 ```
-#install windows ad VM by using https://github.com/tcler/make-windows-vm
+#install windows ad VM by using kiss-vm
+winVmName=win2019-ad
+winIsoUrl=/path/to/windows-server-2019.iso
+vm create Windows-server -n ${winVmName} -C $winIsoUrl --dsize 50 --msize 8092 \
+	--win-auto=cifs-nfs \
+	--win-enable-kdc \
+	--win-domain ${ADDomain} --win-passwd ${ADPasswd} --force --wait
 
-eval $(< /tmp/${WinVmName}.env)
+eval $(< /tmp/${winVmName}.env)
 NTP_SERVER=10.5.26.10
 DNS_DOMAIN=${AD_DOMAIN}
 DNS_ADDR=${VM_EXT_IP}
