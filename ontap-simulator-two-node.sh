@@ -372,14 +372,14 @@ read controller_located _ < <(hostname -A)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> [$vmnode1] start ...\033[0m"
-vm -n $vmnode1 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --disable-guest-hypv \
+vm create -n $vmnode1 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netcluster,e1000 --net=$netcluster,e1000 \
 	--net-macvtap=-,e1000 \
 	--net=$netdata,e1000 --net=$netdata,e1000 \
 	--net-macvtap=-,e1000 \
-	--noauto --force --nocloud --osv freebsd11.2 --bus=ide --msize $((6*1024)) --cpus 2,cores=2 \
-	--vncput-after-install key:enter
+	--noauto --nocloud --video auto --osv freebsd11.2 --diskbus=ide --msize $((6*1024)) --cpus 2,cores=2 \
+	--vncput-after-install key:enter  --force
 
 read vncaddr <<<"$(vm vnc $vmnode1)"
 vncaddr=${vncaddr/:/::}
@@ -513,15 +513,15 @@ node2_managementif_gateway=$(getDefaultGateway)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> [$vmnode2] start ...\033[0m"
-vm -n $vmnode2 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --disable-guest-hypv \
+vm create -n $vmnode2 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netcluster,e1000 --net=$netcluster,e1000 \
 	--net-macvtap=-,e1000 \
 	--net=$netdata,e1000 --net=$netdata,e1000 \
 	--net-macvtap=-,e1000 \
-	--noauto --force --nocloud --osv freebsd11.2 \
-	--bus=ide --msize $((6*1024)) --cpus 2,cores=2 \
-	--vncput-after-install "x"
+	--noauto --nocloud --video auto --osv freebsd11.2 \
+	--diskbus=ide --msize $((6*1024)) --cpus 2,cores=2 \
+	--vncput-after-install "x"  --force
 
 read vncaddr <<<"$(vm vnc $vmnode2)"
 vncaddr=${vncaddr/:/::}
