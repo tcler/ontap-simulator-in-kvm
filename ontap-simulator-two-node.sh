@@ -334,7 +334,7 @@ vncwait() {
 		if [[ $loop = $maxloop ]]; then
 			echo "{WARN}: vncwait has been waiting for more than $(bc <<< "600*$tim") seconds"
 			screentext=$(vncget $addr)
-			if echo "$screentext"|egrep ^PANIC.?:; then
+			if echo "$screentext"|egrep '^(PANIC *:|vpanic)'; then
 				kill -SIGALRM $CPID
 			else
 				echo "$screentext"
