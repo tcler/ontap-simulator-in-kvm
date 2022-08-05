@@ -36,7 +36,7 @@
 CPID=$$
 PROG=$0
 ARGS=("$@")
-trap_vmpanic() { exec $PROG "${ARGS[@]}"; }
+trap_vmpanic() { echo "[Error] got panic in VM, try again:"; exec $PROG "${ARGS[@]}"; }
 trap trap_vmpanic SIGALRM SIGUSR2
 
 # command line parse
