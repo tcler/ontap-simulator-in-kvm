@@ -35,7 +35,8 @@
 
 CPID=$$
 PROG=$0
-trap_vmpanic() { exec $PROG "$@"; }
+ARGS=("$@")
+trap_vmpanic() { exec $PROG "${ARGS[@]}"; }
 trap trap_vmpanic SIGALRM SIGUSR2
 
 # command line parse
