@@ -22,6 +22,11 @@
 #     e.g: vm rhel-8.3% -net=ontap-data
 #
 
+CPID=$$
+PROG=$0
+trap_vmpanic() { exec $PROG "$@"; }
+trap trap_vmpanic SIGALRM SIGUSR2
+
 # command line parse
 P=${0##*/}
 Usage() {
@@ -301,6 +306,7 @@ vncwait() {
 	local ignored_charset="$4"
 	local maxloop=60
 	local loop=0
+	local screentext=
 
 	echo -e "\n=> waiting: \033[1;36m$pattern\033[0m prompt ..."
 	while true; do
@@ -309,7 +315,12 @@ vncwait() {
 		let loop++
 		if [[ $loop = $maxloop ]]; then
 			echo "{WARN}: vncwait has been waiting for more than $(bc <<< "600*$tim") seconds"
-			vncget $addr
+			screentext=$(vncget $addr)
+			if echo "$screentext"|egrep ^PANIC.?:; then
+				kill -SIGALRM $CPID
+			else
+				echo "$screentext"
+			fi
 			loop=0
 		fi
 	done
