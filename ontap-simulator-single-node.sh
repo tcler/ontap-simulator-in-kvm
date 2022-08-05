@@ -25,8 +25,12 @@
 CPID=$$
 PROG=$0
 ARGS=("$@")
-trap_vmpanic() { echo "[Error] got panic in VM, try again:"; exec $PROG "${ARGS[@]}"; }
+trap_vmpanic() {
+	echo "[Error] got panic in VM, try again:";
+	VMPANIC=yes exec $PROG "${ARGS[@]}";
+}
 trap trap_vmpanic SIGALRM SIGUSR2
+[[ "$VMPANIC" = yes ]] && qemucpuOpt=--qemucpu=Icelake-Server
 
 # command line parse
 P=${0##*/}
@@ -364,7 +368,7 @@ vm create -n $vmnode ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netdata,e1000  --net=$netdata,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
 	--noauto --nocloud --video auto --osv freebsd11.2 --diskbus=ide --msize $((6*1024)) --cpus 2,cores=2 \
-	--vncput-after-install key:enter  --force
+	--vncput-after-install key:enter  --force  $qemucpuOpt
 
 read vncaddr <<<"$(vm vnc $vmnode)"
 vncaddr=${vncaddr/:/::}
