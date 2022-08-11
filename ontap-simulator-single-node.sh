@@ -133,8 +133,8 @@ for i in {1..4}; do
 done
 
 # install dependency
-command -v ipcalc || {
-	sudo yum install -y ipcalc
+command -v ipcalc && command -v nmap || {
+	sudo yum install -y ipcalc nmap
 }
 
 getIp4() {
@@ -170,7 +170,6 @@ freeIpList() {
 	local excludeIpList="$*"
 	IFS=/ read ip netmasklen < <(getDefaultIp4)
 	IFS== read key netaddr < <(ipcalc -n $ip/$netmasklen)
-	which nmap &>/dev/null || yum install -y nmap >/dev/null
 	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
 
 	if [[ -n "$excludeIpList" ]]; then
