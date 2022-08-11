@@ -7,7 +7,7 @@ but this requires a lot of manual operations and cannot be automated.
 
 # platform requires
 In order to run this script correctly, you need a PC or laptop with 16G RAM, and the OS shoud be CentOS-7/RHEL-7/Fedora-30 or higher  
-(verified on Fedora-{32..34}, RHEL-8.{2..5}, RHEL-7.{8,9})
+(verified on Fedora-{32..36}, RHEL-8.{2..7}, RHEL-7.{8,9})
 
 # software requires
 You also need to install [kiss-vm-ns](https://github.com/tcler/kiss-vm-ns) in advance:
