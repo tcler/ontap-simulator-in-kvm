@@ -47,16 +47,16 @@ BaseUrl=${protocol// /}://${address// /}/${basepath// /}
 read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
 HostIPSuffix=$(printf %02x%02x $C $D)
 HostIPSuffixL=$(printf %02x%02x%02x%02x $A $B $C $D)
-WinVmName=win2016-${HostIPSuffix}
+WinVmName=win2022-${HostIPSuffix}
 
 if true; then
 #-------------------------------------------------------------------------------
 #WINVER=2019
 #img_name=Win2019-Evaluation.iso
 #os_variant=win2k19
-WINVER=2016
-img_name=Win2016-Evaluation.iso
-os_variant=win2k16
+WINVER=2022
+img_name=Win2022-Evaluation.iso
+os_variant=win2k22
 
 openssh_url="$BaseUrl/windows-images/OpenSSH-Win64.zip"
 img_url="$BaseUrl/windows-images/$img_name"
@@ -75,8 +75,8 @@ fi
 
 #-------------------------------------------------------------------------------
 pdir="Netapp-Simulator"
-ovaImage=vsim-netapp-DOT9.8-cm_nodar.ova
-licenseFile=CMode_licenses_9.8.txt
+ovaImage=vsim-netapp-DOT9.11.1-cm_nodar.ova
+licenseFile=CMode_licenses_9.11.1.txt
 ImageUrl=${BaseUrl}/$pdir/$ovaImage
 LicenseFileUrl=${BaseUrl}/$pdir/$licenseFile
 script=ontap-simulator-two-node.sh
