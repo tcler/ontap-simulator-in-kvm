@@ -331,6 +331,10 @@ vncwait() {
 	local screentext=
 
 	echo -e "\n=> waiting: \033[1;36m$pattern\033[0m prompt ..."
+	screentext=$(vncget $addr)
+	if echo "$screentext"|egrep '^(PANIC *:|vpanic)'; then
+		kill -SIGALRM $CPID
+	fi
 	while true; do
 		vncget $addr | ocrgrep "$pattern" "$ignored_charset" && break
 		sleep $tim
