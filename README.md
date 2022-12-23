@@ -21,8 +21,11 @@ git clone --depth=1 https://github.com/tcler/kiss-vm-ns; sudo make -C kiss-vm-ns
 # usage/steps
 ## download ONTAP simulator image and license file
 ```
-# download url: https://mysupport.netapp.com/site/tools/tool-eula/simulate-ontap
-# note: need log in to the NetApp Support Site at http://mysupport-beta.netapp.com/ before download
+# Download url: https://mysupport.netapp.com/site/tools/tool-eula/simulate-ontap
+# Note: need log in to the NetApp Support Site at http://mysupport-beta.netapp.com/ before download
+# `Update(2022-12-22): found some where could download the old simulator release:
+#  |-> http://www.leraren.it/~gerard/download/NetApp/
+#  |-> https://sysin.org/blog/netapp-ontap-9/
 # ls -1 *.ova *.txt
 CMode_licenses_9.9.1.txt
 vsim-netapp-DOT9.9.1-cm_nodar.ova
