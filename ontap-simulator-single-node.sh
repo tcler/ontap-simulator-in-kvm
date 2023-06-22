@@ -143,7 +143,7 @@ getIp4() {
 	local nic=$1
 	local ipaddr=`ip addr show $nic`;
 	ret=$(echo "$ipaddr" |
-		awk '/inet .* global dynamic/{match($0,"inet ([0-9.]+/[0-9]+)",M); print M[1]}');
+		awk '/inet .* global (.* )?dynamic/{match($0,"inet ([0-9.]+/[0-9]+)",M); print M[1]}');
 
 	if [[ -n "$ret" ]]; then
 		echo "$ret"
