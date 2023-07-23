@@ -192,7 +192,7 @@ freeIpList() {
 
 	if [[ -n "$excludeIpList" ]]; then
 		echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d' |
-			egrep -v "^${excludeIpList// /|}$"
+			grep -E -v "^${excludeIpList// /|}$"
 	else
 		echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d'
 	fi
@@ -332,7 +332,7 @@ vncwait() {
 
 	echo -e "\n=> waiting: \033[1;36m$pattern\033[0m prompt ..."
 	screentext=$(vncget $addr)
-	if echo "$screentext"|egrep '^(PANIC *:|vpanic)'; then
+	if echo "$screentext"|grep -E '^(PANIC *:|vpanic)'; then
 		kill -SIGALRM $CPID
 	fi
 	while true; do
@@ -342,7 +342,9 @@ vncwait() {
 		if [[ $loop = $maxloop ]]; then
 			echo "{WARN}: vncwait has been waiting for more than $(bc <<< "600*$tim") seconds"
 			screentext=$(vncget $addr)
-			if echo "$screentext"|egrep '^(PANIC *:|vpanic)'; then
+			if echo "$screentext"|grep -E '^(PANIC *:|vpanic)'; then
+				kill -SIGALRM $CPID
+			elif echo "$screentext"|grep -E 'Waiting until daemon ktlsd starts up'; then
 				kill -SIGALRM $CPID
 			else
 				echo "$screentext"
@@ -394,13 +396,14 @@ read controller_located _ < <(hostname -A)
 :; echo -e "\033[1;30m=> [$vmnode1] start ...\033[0m"
 OSV=freebsd11.2
 vm create -n $vmnode1 ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
+	--diskbus=ide \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netcluster,e1000 --net=$netcluster,e1000 \
 	--net-macvtap=-,e1000 \
 	--net=$netdata,e1000 --net=$netdata,e1000 \
 	--net-macvtap=-,e1000 \
 	--noauto --nocloud --video auto --osv $OSV \
-	--diskbus=ide --msize $((6*1024)) --cpus 2,cores=2 \
+	--msize $((6*1024)) --cpus 2,cores=2 \
 	--vncput-after-install key:enter  --force  $qemucpuOpt
 
 read vncaddr <<<"$(vm vnc $vmnode1)"
