@@ -368,13 +368,12 @@ vm netls | grep -w $netdata >/dev/null || vm netstart $netdata
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> node vm start ...\033[0m"
-PATH=/usr/libexec:$PATH qemu-kvm -M ?|grep -q q35 && MOPT=-machine=q35
 OSV=freebsd11.2
 vm create -n $vmnode ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 \
 	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netdata,e1000  --net=$netdata,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
 	--noauto --nocloud --video auto --osv $OSV --diskbus=ide --msize $((6*1024)) --cpus 2,cores=2 \
-	--vncput-after-install key:enter  --force  $qemucpuOpt $MOPT
+	--vncput-after-install key:enter  --force  $qemucpuOpt
 
 read vncaddr <<<"$(vm vnc $vmnode)"
 vncaddr=${vncaddr/:/::}
