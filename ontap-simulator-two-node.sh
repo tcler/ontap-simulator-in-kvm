@@ -42,7 +42,11 @@ trap_vmpanic() {
 	VMPANIC=yes exec $PROG "${ARGS[@]}";
 }
 trap trap_vmpanic SIGALRM SIGUSR2
-[[ "$VMPANIC" = yes ]] && qemucpuOpt=--qemucpu=Icelake-Server
+[[ "$VMPANIC" = yes ]] && {
+	qemucpuOpt=--qemucpu=Icelake-Server
+	PATH=/usr/libexec:$PATH qemu-kvm -cpu ?|grep -q Icelake-Server ||
+		qemucpuOpt=--qemucpu=Skylake-Server
+}
 
 # command line parse
 P=${0##*/}
