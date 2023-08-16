@@ -132,9 +132,10 @@ if [[ ! -f $LicenseFile ]]; then
 fi
 
 #convert image file to qcow2 files
-tar vxf $ImageFile || exit 1
+_dir=$(dirname $ImageFile)
+tar vxf $ImageFile -C $_dir || exit 1
 for i in {1..4}; do
-    qemu-img convert -f vmdk -O qcow2 vsim-NetAppDOT-simulate-disk${i}.vmdk vsim-NetAppDOT-simulate-disk${i}.qcow2
+    qemu-img convert -f vmdk -O qcow2 $_dir/vsim-NetAppDOT-simulate-disk${i}.vmdk $_dir/vsim-NetAppDOT-simulate-disk${i}.qcow2
 done
 
 # install dependency
@@ -375,8 +376,8 @@ vm netls | grep -w $netdata >/dev/null || vm netstart $netdata
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> node vm start ...\033[0m"
 OSV=freebsd11.2
-vm create -n $vmnode ONTAP-simulator -i vsim-NetAppDOT-simulate-disk1.qcow2 --diskbus=ide \
-	--disk=vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
+vm create -n $vmnode ONTAP-simulator -i $_dir/vsim-NetAppDOT-simulate-disk1.qcow2 --diskbus=ide \
+	--disk=$_dir/vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netdata,e1000  --net=$netdata,e1000 --net-macvtap=-,e1000 --net-macvtap=-,e1000 \
 	--noauto --nocloud --video auto --osv $OSV --msize $((6*1024)) --cpus 2,cores=2 \
 	--vncput-after-install key:enter  --force  $qemucpuOpt
