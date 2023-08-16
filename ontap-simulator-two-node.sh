@@ -149,7 +149,7 @@ if [[ ! -f $LicenseFile ]]; then
 fi
 
 #convert image file to qcow2 files
-_dir=$(dirname $ImageFile)
+_dir=$(dirname $ImageFile); [[ ! -w "$_dir" ]] && _dir=/tmp
 tar vxf $ImageFile -C $_dir || exit 1
 for i in {1..4}; do
     qemu-img convert -f vmdk -O qcow2 $_dir/vsim-NetAppDOT-simulate-disk${i}.vmdk $_dir/vsim-NetAppDOT-simulate-disk${i}.qcow2
