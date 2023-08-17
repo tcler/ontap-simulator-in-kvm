@@ -55,9 +55,8 @@ Usage() {
 	  --vserver-name <NetBIOS>           #NetBIOS(or host name) of vserver, used by krb5 configuring
 	  --cifs-workgroup <NetBIOS>         #Workgroup Name, This parameter specifies the name of the workgroup (up to 15 characters).
 	  --ad-hostname <FQDN>               #Fully Qualified Domain Name, This parameter specifies the name of window servers.
-	  --ad-ip <ip>                       #window servers ip.
-	  --ad-ip-hostonly <ip>              #window servers ip used to connect from VM HOST.
-	  --ssh-bind-ip <ip>                 #another public ip address used for ssh to KVM guest from host
+	  --ad-vm <vmname>                   #windows servers vm name.
+	  --ad-ip <ip>                       #windows servers ip.
 	  --ad-admin <user>                  #Active Directory admin user name
 	  --ad-passwd <passwd>               #Active Directory admin password
 	  --ntp-server <addr>                #ntp server address
@@ -78,6 +77,7 @@ _at=`getopt -o h \
 	--long vserver-name: \
 	--long cifs-workgroup: \
 	--long ad-hostname: \
+	--long ad-vm: \
 	--long ad-ip: \
 	--long ad-ip-hostonly: \
 	--long ssh-bind-ip: \
@@ -100,6 +100,7 @@ while true; do
 	--vserver-name)   NAS_SERVER_NAME=$2; shift 2;;
 	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
 	--ad-hostname)    AD_NAME=$2; shift 2;;
+	--ad-vm)          AD_VM=$2; shift 2;;
 	--ad-ip)          AD_IP=$2; shift 2;;
 	--ad-ip-hostonly) AD_IP_HOSTONLY=$2; SSH_BIND_IP=; shift 2;;
 	--ssh-bind-ip)    SSH_BIND_IP=$2; AD_IP_HOSTONLY=; shift 2;;
@@ -191,11 +192,8 @@ ExcludeIpList=($AD_IP)
 if [[ -n "$AD_IP" ]]; then
 	echo -e "Assert 1: ping windows AD server: $AD_IP ..."
 	ping -c 4 $AD_IP || {
-		if [[ -n "$AD_IP_HOSTONLY" ]]; then
-			sshOpt="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-			ipinfo=$(expect -c "spawn ssh $sshOpt $AD_ADMIN@${AD_IP_HOSTONLY} ipconfig
-			expect {password:} { send \"${AD_PASSWD}\\r\" }
-			")
+		if [[ -n "$AD_VM" ]]; then
+			ipinfo=$(vm exec -v $AD_VM -u "${AD_ADMIN}:${AD_PASSWD}" -- ipconfig)
 			if ! grep "\<$AD_IP\>" <<<"$ipinfo"; then
 				exit 1
 			fi
@@ -806,15 +804,8 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 "
 
 [[ -n "$AD_DOMAIN" ]] && {
-	[[ -n "$SSH_BIND_IP" ]] && SSH_BIND_OPT="-b $SSH_BIND_IP"
-
 	echo -e "\033[1;30m=> Add dns entry for nas server($NAS_SERVER_NAME) in Windows AD($AD_DOMAIN) ...\033[0m"
-	sshOpts="$SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-	expect -c "spawn ssh $sshOpts $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP} powershell -Command {Add-DnsServerResourceRecordA -Name $NAS_SERVER_NAME -ZoneName $AD_DOMAIN -AllowUpdateAny -IPv4Address $LIF1_1_ADDR}
-	expect {password:} { send \"${AD_PASSWD}\\r\" }
-	expect eof
-	"
-	host $NAS_SERVER_NAME $AD_IP_HOSTONLY
+	vm exec -v $AD_VM -u "${AD_ADMIN}:${AD_PASSWD}" -- "Add-DnsServerResourceRecordA -Name $NAS_SERVER_NAME -ZoneName $AD_DOMAIN -AllowUpdateAny -IPv4Address $LIF1_1_ADDR"
 	host $NAS_SERVER_NAME $AD_IP
 
 	LogOutPut=$(expect -c "spawn ssh admin@$cluster_managementif_addr
@@ -855,16 +846,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect eof
 	"
 
-	expect -c "spawn ssh $SSH_BIND_OPT -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $AD_ADMIN@${AD_IP_HOSTONLY:-$AD_IP}
-	expect {password:} { send \"${AD_PASSWD}\\r\" }
-	expect {>} { send \"powershell\\r\" }
-	expect {>} {
-		send \"Set-ADComputer NFS-${NAS_SERVER_NAME} -KerberosEncryptionType AES256,AES128,DES,RC4\\r\"
-	}
-	expect {>} { send \"exit\\r\" }
-	expect {>} { send \"exit\\r\" }
-	expect eof
-	" 
+	vm exec -v $AD_VM -u "${AD_ADMIN}:${AD_PASSWD}" -- "Set-ADComputer NFS-${NAS_SERVER_NAME} -KerberosEncryptionType AES256,AES128,DES,RC4"
 }
 
 cifs_delete() {
