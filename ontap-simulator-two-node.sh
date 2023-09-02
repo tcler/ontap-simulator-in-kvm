@@ -1029,10 +1029,11 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 			{${cluster_name}::>} { send \"\\r\" }
 		}
 	}
+	expect {${cluster_name}::>} { send \"cluster date show\\rcluster date show -utc\\r\" }
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof
 	"
-
+	vm exec -v $AD_VM -u "${AD_ADMIN}:${AD_PASSWD}" -- '$(Get-Date).ToUniversalTime().ToString(\"yyyy/MM/dd HH:mm:ss\")'
 	vm exec -v $AD_VM -u "${AD_ADMIN}:${AD_PASSWD}" -- "Set-ADComputer NFS-${NAS_SERVER_NAME} -KerberosEncryptionType AES256,AES128,DES,RC4"
 }
 
