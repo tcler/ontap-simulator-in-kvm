@@ -59,7 +59,7 @@ Usage() {
 	  --ad-ip <ip>                       #windows servers ip.
 	  --ad-admin <user>                  #Active Directory admin user name
 	  --ad-passwd <passwd>               #Active Directory admin password
-	  --ntp-server <addr>                #ntp server address
+	  --ntp-server, --time-server <addr> #ntp/time server hostname/address
 	  --raw                              #Don't do any pre-configuration, after ONTAP system is initialized
 	EOF
 }
@@ -83,7 +83,7 @@ _at=`getopt -o h \
 	--long ssh-bind-ip: \
 	--long ad-admin: \
 	--long ad-passwd: \
-	--long ntp-server: \
+	--long ntp-server: --long time-server: \
 	--long raw \
     -a -n "$0" -- "$@"`
 [[ $? != 0 ]] && { exit 1; }
@@ -106,7 +106,7 @@ while true; do
 	--ssh-bind-ip)    SSH_BIND_IP=$2; AD_IP_HOSTONLY=; shift 2;;
 	--ad-admin)       AD_ADMIN=$2; shift 2;;
 	--ad-passwd)      AD_PASSWD=$2; shift 2;;
-	--ntp-server)     NTP_SERVER=$2; shift 2;;
+	--ntp-server|--time-server) TIME_SERVER=$2; shift 2;;
 	--raw)            RAW=yes; shift 1;;
 	--) shift; break;;
 	esac
@@ -343,7 +343,7 @@ vncwait() {
 ##please change/cusotmize bellow default configration at first
 cluster_name=fsqe-snc1
 password=fsqe2020
-NTP_SERVER=${NTP_SERVER:-192.168.10.1}
+TIME_SERVER=${TIME_SERVER:-time.windows.com}
 
 vmnode=ontap-single
 node_managementif_port=e0c
@@ -753,7 +753,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"volume create -volume $CIFSVOL2 -aggregate $CIFSVOL2_AGGR -size $CIFSVOL2_SIZE -state online -unix-permissions ---rwxrwxrwx -type RW  -vserver $VS -junction-path $CIFSVOL2_PATH -policy $PolicyName -group 0 -user 0\\r\"
 	}
 	expect {${cluster_name}::>} {
-		send \"ntp server create -server $NTP_SERVER\\r\"
+		send \"ntp server create -server $TIME_SERVER\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"cifs create -vserver $VS -cifs-server $NAS_SERVER_NAME $cifsOption\\r\"
