@@ -1007,8 +1007,8 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
-	expect {${cluster_name}::>} { send \"cluster date modify -timezone ${TimeZone:-America/New_York}\\r\" }
-	expect {${cluster_name}::>} { send \"cluster date modify -date \\\"$(date '+%m/%d/%Y %H:%M:%S')\\\"\\r\" }
+	#expect {${cluster_name}::>} { send \"cluster date modify -timezone ${TimeZone:-America/New_York}\\r\" }
+	#expect {${cluster_name}::>} { send \"cluster date modify -date \\\"$(date '+%m/%d/%Y %H:%M:%S')\\\"\\r\" }
 	expect {${cluster_name}::>} {
 		send \"vserver name-mapping  create -vserver $VS -direction krb-unix -position 1 -pattern (.+)\\\\\$@$AD_REALM  -replacement root\\r\"
 	}
