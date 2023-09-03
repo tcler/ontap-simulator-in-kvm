@@ -1002,8 +1002,8 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		expect eof
 		")
 	NETBIOS_WIN=`echo "$LogOutPut" |grep -A 2 domain-workgroup | awk 'END{print $2}'`
-	TimeZone=$(timedatectl | awk '/Time zone:/{print $3}')
 
+	#TimeZone=$(timedatectl | awk '/Time zone:/{print $3}')
 	expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} { send \"${password}\\r\" }
