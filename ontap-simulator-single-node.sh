@@ -806,7 +806,9 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 [[ -n "$AD_DOMAIN" ]] && {
 	echo -e "\033[1;30m=> Add dns entry for nas server($NAS_SERVER_NAME) in Windows AD($AD_DOMAIN) ...\033[0m"
 	vm exec -v $AD_VM -u "${AD_ADMIN}:${AD_PASSWD}" -- "Add-DnsServerResourceRecordA -Name $NAS_SERVER_NAME -ZoneName $AD_DOMAIN -AllowUpdateAny -IPv4Address $LIF1_1_ADDR"
+	vm exec -v $AD_VM -u "${AD_ADMIN}:${AD_PASSWD}" -- "Add-DnsServerResourceRecordA -Name $NAS_SERVER_NAME -ZoneName $AD_DOMAIN -AllowUpdateAny -IPv4Address $LIF1_0_ADDR"
 	host $NAS_SERVER_NAME $AD_IP
+	host $NAS_SERVER_NAME $(vm if $AD_VM)
 
 	LogOutPut=$(expect -c "spawn ssh admin@$cluster_managementif_addr
 		set timeout 120
