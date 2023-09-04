@@ -493,7 +493,7 @@ vncputln ${vncaddr} "no"
 
 
 vncwait ${vncaddr} "Do you want to use this configuration?" 2
-node1_private_ips=$(vncget $vncaddr|sed -nr '/^.*(169.254.[0-9]+.[0-9]+).*$/{s//\1/; p}')
+node1_private_ips=$(vncget $vncaddr|sed -nr '/^.*(169.254.[0-9]+.[0-9]+).*$/{s//\1/; p}'|grep -v '169\.254\.20\.')
 vncputln ${vncaddr} "yes"
 
 vncwait ${vncaddr} "administrator.* password:" 2
