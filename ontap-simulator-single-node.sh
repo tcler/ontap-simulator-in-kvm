@@ -347,8 +347,13 @@ TIME_SERVER=${TIME_SERVER:-time.windows.com}
 
 vmnode=ontap-single
 node_managementif_port=e0c
-node_managementif_addr=$node_managementif_addr #10.66.12.108
-node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
+if [[ -z "$node_managementif_addr" ]]; then
+	node_managementif_addr=169.254.10.11
+	node_managementif_mask=16
+else
+	node_managementif_addr=$node_managementif_addr #10.66.12.108
+	node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
+fi
 node_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0a
 cluster_managementif_addr=192.168.10.11

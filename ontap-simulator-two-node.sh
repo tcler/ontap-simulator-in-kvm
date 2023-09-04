@@ -377,8 +377,13 @@ TIME_SERVER=${TIME_SERVER:-time.windows.com}
 #node1
 vmnode1=ontap-node1
 node1_managementif_port=e0c
-node1_managementif_addr=$node1_managementif_addr #10.66.12.176
-node1_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
+if [[ -z "$node1_managementif_addr" ]]; then
+	node1_managementif_addr=169.254.20.11
+	node1_managementif_mask=16
+else
+	node1_managementif_addr=$node1_managementif_addr
+	node1_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
+fi
 node1_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0d
 cluster_managementif_addr=192.168.20.11
@@ -535,8 +540,13 @@ colorvncget $vncaddr
 #node2
 vmnode2=ontap-node2
 node2_managementif_port=e0c
-node2_managementif_addr=$node2_managementif_addr #10.66.12.160
-node2_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
+if [[ -z "$node2_managementif_addr" ]]; then
+	node2_managementif_addr=169.254.20.12
+	node2_managementif_mask=16
+else
+	node2_managementif_addr=$node2_managementif_addr
+	node2_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
+fi
 node2_managementif_gateway=$(getDefaultGateway)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
