@@ -190,7 +190,7 @@ extNetOpt="--net-macvtap=-"
 [[ -d /sys/class/net/$extconnif/wireless ]] && {
 	extconnif=virbr-kissalt
 	extNetOpt="--net=kissaltnet"
-	gateWay=$(getIp4 $extconnif)
+	gateWay=$(getIp4 $extconnif|awk -F/ '{print $1}')
 }
 
 ############################## Assert ##############################
