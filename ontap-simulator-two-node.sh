@@ -377,13 +377,8 @@ TIME_SERVER=${TIME_SERVER:-time.windows.com}
 #node1
 vmnode1=ontap-node1
 node1_managementif_port=e0c
-if [[ -z "$node1_managementif_addr" ]]; then
-	node1_managementif_addr=169.254.20.11
-	node1_managementif_mask=16
-else
-	node1_managementif_addr=$node1_managementif_addr
-	node1_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
-fi
+node1_managementif_addr=$node1_managementif_addr
+node1_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node1_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0d
 cluster_managementif_addr=192.168.20.11
@@ -432,6 +427,11 @@ vncwait ${vncaddr} "^login:" 5
 	node1_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node1_managementif_addr" ]] &&
 	node1_managementif_addr=$(freeIpList "${ExcludeIpList[@]}"|sort -R|tail -1)
+if [[ -z "$node1_managementif_addr" ]]; then
+	node1_managementif_addr=169.254.20.11
+	node1_managementif_mask=16
+	node1_managementif_gateway=169.254.20.1
+fi
 ExcludeIpList+=($node1_managementif_addr)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
@@ -540,13 +540,8 @@ colorvncget $vncaddr
 #node2
 vmnode2=ontap-node2
 node2_managementif_port=e0c
-if [[ -z "$node2_managementif_addr" ]]; then
-	node2_managementif_addr=169.254.20.12
-	node2_managementif_mask=16
-else
-	node2_managementif_addr=$node2_managementif_addr
-	node2_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
-fi
+node2_managementif_addr=$node2_managementif_addr
+node2_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node2_managementif_gateway=$(getDefaultGateway)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
@@ -581,6 +576,11 @@ vncwait ${vncaddr} "^login:" 5
 	node2_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node2_managementif_addr" ]] &&
 	node2_managementif_addr=$(freeIpList "${ExcludeIpList[@]}"|sort -R|tail -1)
+if [[ -z "$node2_managementif_addr" ]]; then
+	node2_managementif_addr=169.254.20.12
+	node2_managementif_mask=16
+	node2_managementif_gateway=169.254.20.1
+fi
 ExcludeIpList+=($node2_managementif_addr)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"

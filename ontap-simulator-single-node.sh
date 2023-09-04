@@ -347,13 +347,8 @@ TIME_SERVER=${TIME_SERVER:-time.windows.com}
 
 vmnode=ontap-single
 node_managementif_port=e0c
-if [[ -z "$node_managementif_addr" ]]; then
-	node_managementif_addr=169.254.10.11
-	node_managementif_mask=16
-else
-	node_managementif_addr=$node_managementif_addr #10.66.12.108
-	node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
-fi
+node_managementif_addr=$node_managementif_addr #10.66.12.108
+node_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
 node_managementif_gateway=$(getDefaultGateway)
 cluster_managementif_port=e0a
 cluster_managementif_addr=192.168.10.11
@@ -404,6 +399,11 @@ vncwait ${vncaddr} "^login:" 5
 	node_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node_managementif_addr" ]] &&
 	node_managementif_addr=$(freeIpList "${ExcludeIpList[@]}"|sort -R|tail -1)
+if [[ -z "$node_managementif_addr" ]]; then
+	node_managementif_addr=169.254.10.11
+	node_managementif_mask=16
+	node_managementif_gateway=169.254.10.1
+fi
 ExcludeIpList+=($node_managementif_addr)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
