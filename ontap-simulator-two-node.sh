@@ -166,7 +166,7 @@ getIp4() {
 	local nic=$1
 	local ipaddr=`ip addr show $nic`;
 	ret=$(echo "$ipaddr" |
-		awk '/inet .* global (.* )?dynamic/{match($0,"inet ([0-9.]+/[0-9]+)",M); print M[1]}');
+		awk '/inet .* (global|host lo)/{match($0,"inet ([0-9.]+/[0-9]+)",M); print M[1]}')
 
 	if [[ -n "$ret" ]]; then
 		echo "$ret"
@@ -184,15 +184,12 @@ getDefaultNic() {
 	done
 	[[ -n "$nic" ]] && echo "$nic"
 }
-getDefaultIp4() {
-	local nic=$(getDefaultNic)
-	[ -z "$nic" ] && return 1
-	getIp4 "$nic"
-}
-getDefaultIp4Mask() { ipcalc -m $(getDefaultIp4) | sed 's/.*=//'; }
+getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
+getIp4Mask() { local ip4="$1"; ipcalc -m $ip4 | sed 's/.*=//'; }
 freeIpList() {
+	local nic="$1"
 	local excludeIpList="$*"
-	IFS=/ read ip netmasklen < <(getDefaultIp4)
+	IFS=/ read ip netmasklen < <(getIp4 $nic)
 	IFS== read key netaddr < <(ipcalc -n $ip/$netmasklen)
 	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
 
@@ -204,6 +201,14 @@ freeIpList() {
 	fi
 }
 ExcludeIpList=($AD_IP)
+extconnif=$(getDefaultNic)
+extNetOpt="--net-macvtap=-"
+gateWay=$(getDefaultGateway)
+[[ -d /sys/class/net/$extconnif/wireless ]] && {
+	extconnif=virbr-kissalt
+	extNetOpt="--net=kissaltnet"
+	gateWay=$(getIp4 $extconnif)
+}
 
 ############################## Assert ##############################
 if [[ -n "$AD_IP" ]]; then
@@ -221,11 +226,10 @@ if [[ -n "$AD_IP" ]]; then
 fi
 ############################## Assert ##############################
 
-getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
 dns_domain_names() { sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf; }
 dns_addrs() {
 	if grep -q 127.0.0.53 /etc/resolv.conf; then
-		systemd-resolve --status -4 $(getDefaultNic) | sed 's/: */:\n/' |
+		systemd-resolve --status -4 $extconnif | sed 's/: */:\n/' |
 			sed -n '/^ *DNS Servers:/,/^ *DNS/ {/DNS.*:/d; s/ /\n/g; p}' | paste -sd ,;
 	else
 		sed -rn '/^nameserver */{s///; s/ *#.*$//; p}' /etc/resolv.conf | paste -sd ,;
@@ -378,8 +382,8 @@ TIME_SERVER=${TIME_SERVER:-time.windows.com}
 vmnode1=ontap-node1
 node1_managementif_port=e0c
 node1_managementif_addr=$node1_managementif_addr
-node1_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
-node1_managementif_gateway=$(getDefaultGateway)
+node1_managementif_mask=$(ipcalc -m $(getIp4 $extconnif)|sed 's/.*=//')
+node1_managementif_gateway=$gateWay
 cluster_managementif_port=e0d
 cluster_managementif_addr=192.168.20.11
 cluster_managementif_mask=255.255.255.0
@@ -403,9 +407,9 @@ vm create -n $vmnode1 ONTAP-simulator -i $_dir/vsim-NetAppDOT-simulate-disk1.qco
 	--diskbus=ide \
 	--disk=$_dir/vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netcluster,e1000 --net=$netcluster,e1000 \
-	--net-macvtap=-,e1000 \
+	${extNetOpt},e1000 \
 	--net=$netdata,e1000 --net=$netdata,e1000 \
-	--net-macvtap=-,e1000 \
+	${extNetOpt},e1000 \
 	--noauto --nocloud --video auto --osv $OSV \
 	--msize $((6*1024)) --cpus 2,cores=2 \
 	--vncput-after-install key:enter  --force  $qemucpuOpt
@@ -427,7 +431,7 @@ vncwait ${vncaddr} "^login:" 5
 [[ -z "$node1_managementif_addr" ]] &&
 	node1_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node1_managementif_addr" ]] &&
-	node1_managementif_addr=$(freeIpList "${ExcludeIpList[@]}"|sort -R|tail -1)
+	node1_managementif_addr=$(freeIpList $extconnif "${ExcludeIpList[@]}"|sort -R|tail -1)
 if [[ -z "$node1_managementif_addr" ]]; then
 	node1_managementif_addr=169.254.20.11
 	node1_managementif_mask=16
@@ -542,8 +546,8 @@ colorvncget $vncaddr
 vmnode2=ontap-node2
 node2_managementif_port=e0c
 node2_managementif_addr=$node2_managementif_addr
-node2_managementif_mask=$(ipcalc -m $(getDefaultIp4)|sed 's/.*=//')
-node2_managementif_gateway=$(getDefaultGateway)
+node2_managementif_mask=$(ipcalc -m $(getIp4 $extconnif)|sed 's/.*=//')
+node2_managementif_gateway=$gateWay
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> [$vmnode2] start ...\033[0m"
@@ -551,9 +555,9 @@ vm create -n $vmnode2 ONTAP-simulator -i $_dir/vsim-NetAppDOT-simulate-disk1.qco
 	--diskbus=ide \
 	--disk=$_dir/vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netcluster,e1000 --net=$netcluster,e1000 \
-	--net-macvtap=-,e1000 \
+	$extNetOpt,e1000 \
 	--net=$netdata,e1000 --net=$netdata,e1000 \
-	--net-macvtap=-,e1000 \
+	$extNetOpt,e1000 \
 	--noauto --nocloud --video auto --osv $OSV \
 	--msize $((6*1024)) --cpus 2,cores=2 \
 	--vncput-after-install "x"  --force  $qemucpuOpt
@@ -576,7 +580,7 @@ vncwait ${vncaddr} "^login:" 5
 [[ -z "$node2_managementif_addr" ]] &&
 	node2_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node2_managementif_addr" ]] &&
-	node2_managementif_addr=$(freeIpList "${ExcludeIpList[@]}"|sort -R|tail -1)
+	node2_managementif_addr=$(freeIpList $extconnif "${ExcludeIpList[@]}"|sort -R|tail -1)
 if [[ -z "$node2_managementif_addr" ]]; then
 	node2_managementif_addr=169.254.20.12
 	node2_managementif_mask=16
@@ -802,8 +806,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 VS=vs1
 VS_AGGR=aggr1_1
 PolicyName=fs_export
-Gateway=$(getDefaultGateway)
-testIp=$(getDefaultIp4|sed 's;/.*$;;')
+testIp=$(getIp4 $extconnif|sed 's;/.*$;;')
 
 VOL1=vol1
 VOL1_AGGR=aggr1_1
@@ -815,9 +818,9 @@ LIF1_0_MASK=255.255.255.0
 LIF1_0_NODE=${cluster_name}-01
 LIF1_0_PORT=e0e
 LIF1_1_NAME=lif1.1
-[[ -z "$LIF1_1_ADDR" ]] && LIF1_1_ADDR=$(freeIpList "${ExcludeIpList[@]}"|sort -R|head -1)
+[[ -z "$LIF1_1_ADDR" ]] && LIF1_1_ADDR=$(freeIpList $extconnif "${ExcludeIpList[@]}"|sort -R|head -1)
 ExcludeIpList+=($LIF1_1_ADDR)
-LIF1_1_MASK=$(getDefaultIp4Mask)
+LIF1_1_MASK=$(getIp4Mask $(getIp4 $extconnif))
 LIF1_1_NODE=${cluster_name}-01
 LIF1_1_PORT=e0f
 
@@ -831,14 +834,14 @@ LIF2_0_MASK=255.255.255.0
 LIF2_0_NODE=${cluster_name}-02
 LIF2_0_PORT=e0e
 LIF2_1_NAME=lif2.1
-[[ -z "$LIF2_1_ADDR" ]] && LIF2_1_ADDR=$(freeIpList "${ExcludeIpList[@]}"|sort -R|head -1)
+[[ -z "$LIF2_1_ADDR" ]] && LIF2_1_ADDR=$(freeIpList $extconnif "${ExcludeIpList[@]}"|sort -R|head -1)
 ExcludeIpList+=($LIF2_1_ADDR)
-LIF2_1_MASK=$(getDefaultIp4Mask)
+LIF2_1_MASK=$(getIp4Mask $(getIp4 $extconnif))
 LIF2_1_NODE=${cluster_name}-02
 LIF2_1_PORT=e0f
 
 [[ -z "$NAS_SERVER_NAME" ]] && {
-	read A B C D N < <(getDefaultIp4|sed 's;[./]; ;g')
+	read A B C D N < <(getIp4 $(getDefaultNic)|sed 's;[./]; ;g')
 	NAS_SERVER_NAME=ontap2-$(printf %02x%02x $C $D)
 }
 NAS_SERVER_FQDN=$NAS_SERVER_NAME
@@ -925,7 +928,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		}
 	}
 	expect {${cluster_name}::>} {
-		send \"network route create -vserver $VS  -destination 0.0.0.0/0 -gateway $Gateway\\r\"
+		send \"network route create -vserver $VS  -destination 0.0.0.0/0 -gateway $gateWay\\r\"
 	}
 	expect {${cluster_name}::>} {
 		send \"dns create -domains $dns_domains -name-servers $dns_addrs -timeout 5 -attempts 4 -skip-config-validation -vserver $VS\\r\"
