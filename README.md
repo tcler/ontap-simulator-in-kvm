@@ -43,41 +43,12 @@ bash ontap-simulator-in-kvm/ontap-simulator-two-node.sh --image $imageFile --lic
 ```
 
 ## more examples
-```
-#install windows ad VM by using kiss-vm
-winVmName=win2019-ad
-winIsoUrl=/path/to/windows-server-2019.iso
-vm create Windows-server -n ${winVmName} -C $winIsoUrl --dsize 50 --msize 8092 \
-	--win-auto=cifs-nfs \
-	--win-enable-kdc \
-	--win-domain ${ADDomain} --win-passwd ${ADPasswd} --force --wait
+- https://github.com/tcler/kiss-vm-ns/blob/master/utils/make-ontap-simulator.sh
+- https://github.com/tcler/kiss-vm-ns/blob/master/utils/make-ontap-with-windows-ad.sh
 
-eval $(< /tmp/${winVmName}.env)
-NTP_SERVER=10.5.26.10
-DNS_DOMAIN=${AD_DOMAIN}
-DNS_ADDR=${VM_EXT_IP}
-AD_HOSTNAME=${AD_FQDN}
-AD_IP=${VM_EXT_IP}
-AD_ADMIN=${ADMINUSER}
-AD_PASS=${ADMINPASSWORD}
+## ssh login ontap cluster's managment port
+ssh admin@192.168.20.11  #default passwd: fsqe2020  
 
-licenseFile=CMode_licenses_9.9.1.txt
-imageFile=vsim-netapp-DOT9.9.1-cm_nodar.ova
+## web login ontap cluster
+https://192.168.20.11
 
-time ontap-simulator-in-kvm/ontap-simulator-single-node.sh \
-  --image $imageFile \
-  --license-file $licenseFile \
-  --node-pubaddr 10.66.61.3 --lif-pubaddr 10.66.61.6 \
-  --ntp-server=$NTP_SERVER --dnsdomains=$DNS_DOMAIN --dnsaddrs=$DNS_ADDR \
-  --ad-hostname=$AD_HOSTNAME --ad-ip=$AD_IP \
-  --ad-admin=$AD_ADMIN --ad-passwd=$AD_PASS --ad-ip-hostonly "${VM_INT_IP}"
-
-time ontap-simulator-in-kvm/ontap-simulator-two-node.sh \
-  --image $imageFile \
-  --license-file $licenseFile \
-  --node1-pubaddr 10.66.60.66 --node2-pubaddr 10.66.60.77 \
-  --lif1-pubaddr 10.66.60.89 --lif2-pubaddr 10.66.60.174 \
-  --ntp-server=$NTP_SERVER --dnsdomains=$DNS_DOMAIN --dnsaddrs=$DNS_ADDR \
-  --ad-hostname=$AD_HOSTNAME --ad-ip=$AD_IP \
-  --ad-admin=$AD_ADMIN --ad-passwd=$AD_PASS --ad-ip-hostonly "${VM_INT_IP}"
-```
