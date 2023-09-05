@@ -211,12 +211,14 @@ fi
 
 dns_domain_names() { sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf; }
 dns_addrs() {
+	local netif="$1" _dnslist=
 	if grep -q 127.0.0.53 /etc/resolv.conf; then
-		systemd-resolve --status -4 $extconnif | sed 's/: */:\n/' |
-			sed -n '/^ *DNS Servers:/,/^ *DNS/ {/DNS.*:/d; s/ /\n/g; p}' | paste -sd ,;
+		_dnslist=$(systemd-resolve --status -4 ${netif} |
+			awk -v RS= 'match($0, /Current DNS Server: ([^\n]+)/, M) {print M[1]}'|paste -sd ,;)
 	else
-		sed -rn '/^nameserver */{s///; s/ *#.*$//; p}' /etc/resolv.conf | paste -sd ,;
+		_dnslist=$(sed -rn '/^nameserver */{s///; s/ *#.*$//; p}' /etc/resolv.conf | paste -sd ,;)
 	fi
+	[[ -n "$_dnslist" ]] && echo $_dnslist || return 1
 }
 
 image_binarize() {
@@ -363,7 +365,7 @@ dns_domains=$(dns_domain_names)
 [[ -n "$DNS_DOMAINS" && $dns_domains != ${DNS_DOMAINS},* ]] && dns_domains=${DNS_DOMAINS},${dns_domains}
 dns_domains=$(echo "${dns_domains}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$2,$3} else print}')
 
-dns_addrs=$(dns_addrs)
+dns_addrs=$(dns_addrs $extconnif||dns_addrs)
 [[ -n "$DNS_ADDRS" && $dns_addrs != ${DNS_ADDRS},* ]] && dns_addrs=${DNS_ADDRS},${dns_addrs}
 dns_addrs=$(echo "${dns_addrs}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$3,$3} else print}')
 dns_addrs=${dns_addrs%,}
