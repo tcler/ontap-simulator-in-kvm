@@ -443,7 +443,7 @@ ExcludeIpList+=($node1_managementif_addr)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
-vncwait ${vncaddr} "Are you sure you want to reboot node.*? {y|n}:" 5
+vncwait ${vncaddr} ".re you sure you want to reboot node.*? .y.n.:" 5
 vncputln ${vncaddr} "y"
 
 echo; expect -c "spawn virsh console $vmnode1
@@ -592,7 +592,7 @@ ExcludeIpList+=($node2_managementif_addr)
 vncputln ${vncaddr} "admin" ""
 vncputln ${vncaddr} "reboot"
 
-vncwait ${vncaddr} "Are you sure you want to reboot node.*? {y|n}:" 5
+vncwait ${vncaddr} ".re you sure you want to reboot node.*? .y.n.:" 5
 vncputln ${vncaddr} "y"
 
 echo; expect -c "spawn virsh console $vmnode2
