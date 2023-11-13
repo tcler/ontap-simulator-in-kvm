@@ -1,5 +1,5 @@
 #!/bin/bash
-#configure ontap simulator 9.7/9.8 as single cluster
+#configure ontap simulator 9.{7..13} as single cluster
 
 #
 #     /-> 192.168.10.0/24       /-> switch that your host connected to. e.g: 10.X.Y.0/23
@@ -131,6 +131,10 @@ if [[ ! -f $LicenseFile ]]; then
 	echo "{WARN} license file '${LicenseFile}' does not exist." >&2
 	exit 1
 fi
+
+#get ontap version
+_fname=${ImageFile##*/}
+ontapver=${_fname/vsim-netapp-DOT/}
 
 #convert image file to qcow2 files
 _dir=$(dirname $ImageFile); [[ ! -w "$_dir" ]] && _dir=/tmp
@@ -346,6 +350,30 @@ vncwait() {
 	done
 }
 
+vercmp() {
+	[ $# != 3 ] && {
+		usage
+		return 1
+	}
+	vl=$1
+	cmpType=$2
+	vr=$3
+	res=1
+
+	[ "$vl" = "$vr" ] && eq=1
+	vmax=$(echo -e "$vl\n$vr" | sort -V | tail -n 1)
+
+	case "$cmpType" in
+	=|eq) [ "$eq" = 1 ] && res=0;;
+	\>|gt) [ "$eq" != 1 -a "$vl" = "$vmax" ] && res=0;;
+	\<|lt) [ "$eq" != 1 -a "$vr" = "$vmax" ] && res=0;;
+	\>=|ge) [ "$vl" = "$vmax" ] && res=0;;
+	\<=|le) [ "$vr" = "$vmax" ] && res=0;;
+	*) echo "$vl" | grep -E -q "$vr"; res=$?;;
+	esac
+	return $res
+}
+
 ##please change/cusotmize bellow default configration at first
 cluster_name=fsqe-snc1
 password=fsqe2020
@@ -405,7 +433,7 @@ vncwait ${vncaddr} "^login:" 5
 [[ -z "$node_managementif_addr" ]] &&
 	node_managementif_addr=$(vncget $vncaddr | sed -nr '/^.*https:..([0-9.]+).*$/{s//\1/; p}')
 [[ -z "$node_managementif_addr" ]] &&
-	node_managementif_addr=$(freeIpList "${ExcludeIpList[@]}"|sort -R|tail -1)
+	node_managementif_addr=$(freeIpList $extconnif "${ExcludeIpList[@]}"|sort -R|tail -1)
 if [[ -z "$node_managementif_addr" ]]; then
 	node_managementif_addr=169.254.10.11
 	node_managementif_mask=16
@@ -417,13 +445,6 @@ vncputln ${vncaddr} "reboot"
 
 vncwait ${vncaddr} ".re you sure you want to reboot node.*? .y.n.:" 5
 vncputln ${vncaddr} "y"
-
-echo; expect -c "spawn virsh console $vmnode
-	set timeout 120
-	expect {
-		-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
-		{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
-	}"
 
 : <<'COMM'
 vncwait ${vncaddr} "Press Ctrl-C for Boot Menu." 5
@@ -437,75 +458,111 @@ vncputln ${vncaddr} "yes"
 
 vncwait ${vncaddr} "This will erase all the data on the disks, are you sure?" 5
 vncputln ${vncaddr} "yes"
-
-echo; expect -c "spawn virsh console $vmnode
-	set timeout 120
-	expect {
-		-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
-		{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
-	}"
 COMM
 
-vncwait ${vncaddr} "Type yes to confirm and continue {yes}:" 10
-vncputln ${vncaddr} "yes"
+echo "{debug} ontapver: $ontapver"
+if vercmp "$ontapver" lt 9.13; then
+	echo; expect -c "spawn virsh console $vmnode
+		set timeout 120
+		expect {
+			-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
+			{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
+		}"
 
-vncwait ${vncaddr} "Enter the node management interface port" 2
-vncputln ${vncaddr} "${node_managementif_port}"
+	vncwait ${vncaddr} "Type yes to confirm and continue {yes}:" 10
+	vncputln ${vncaddr} "yes"
 
-vncwait ${vncaddr} "Enter the node management interface .. address" 2
-vncputln ${vncaddr} "$node_managementif_addr"
+	vncwait ${vncaddr} "Enter the node management interface port" 2
+	vncputln ${vncaddr} "${node_managementif_port}"
 
-vncwait ${vncaddr} "Enter the node management interface netmask" 2
-vncputln ${vncaddr} "$node_managementif_mask"
+	vncwait ${vncaddr} "Enter the node management interface .. address" 2
+	vncputln ${vncaddr} "$node_managementif_addr"
 
-vncwait ${vncaddr} "Enter the node management interface default gateway" 2
-vncputln ${vncaddr} "$node_managementif_gateway"
+	vncwait ${vncaddr} "Enter the node management interface netmask" 2
+	vncputln ${vncaddr} "$node_managementif_mask"
 
-vncwait ${vncaddr} "complete cluster setup using the command line" 2
-vncputln ${vncaddr}
+	vncwait ${vncaddr} "Enter the node management interface default gateway" 2
+	vncputln ${vncaddr} "$node_managementif_gateway"
 
-vncwait ${vncaddr} "create a new cluster or join an existing cluster?" 2
-vncputln ${vncaddr} "create"
+	vncwait ${vncaddr} "complete cluster setup using the command line" 2
+	vncputln ${vncaddr}
 
-vncwait ${vncaddr} "used as a single node cluster?" 2
-vncputln ${vncaddr} "yes"
+	vncwait ${vncaddr} "create a new cluster or join an existing cluster?" 2
+	vncputln ${vncaddr} "create"
 
-vncwait ${vncaddr} "administrator.* password:" 2
-vncputln ${vncaddr} "$password"
+	vncwait ${vncaddr} "used as a single node cluster?" 2
+	vncputln ${vncaddr} "yes"
 
-vncwait ${vncaddr} "Retype the password:" 2
-vncputln ${vncaddr} "$password"
+	vncwait ${vncaddr} "administrator.* password:" 2
+	vncputln ${vncaddr} "$password"
 
-vncwait ${vncaddr} "Enter the cluster name:" 2
-vncputln ${vncaddr} "$cluster_name"
+	vncwait ${vncaddr} "Retype the password:" 2
+	vncputln ${vncaddr} "$password"
 
-vncwait ${vncaddr} "Enter an additional license key" 2
-vncputln ${vncaddr}
+	vncwait ${vncaddr} "Enter the cluster name:" 2
+	vncputln ${vncaddr} "$cluster_name"
 
-vncwait ${vncaddr} "Enter the cluster management interface port" 2
-vncputln ${vncaddr} "${cluster_managementif_port}"
+	vncwait ${vncaddr} "Enter an additional license key" 2
+	vncputln ${vncaddr}
 
-vncwait ${vncaddr} "Enter the cluster management interface .. address" 2
-vncputln ${vncaddr} "$cluster_managementif_addr"
+	vncwait ${vncaddr} "Enter the cluster management interface port" 2
+	vncputln ${vncaddr} "${cluster_managementif_port}"
 
-vncwait ${vncaddr} "Enter the cluster management interface netmask" 2
-vncputln ${vncaddr} "$cluster_managementif_mask"
+	vncwait ${vncaddr} "Enter the cluster management interface .. address" 2
+	vncputln ${vncaddr} "$cluster_managementif_addr"
 
-vncwait ${vncaddr} "Enter the cluster management interface default gateway" 2
-vncputln ${vncaddr} "$cluster_managementif_gateway"
+	vncwait ${vncaddr} "Enter the cluster management interface netmask" 2
+	vncputln ${vncaddr} "$cluster_managementif_mask"
 
-vncwait ${vncaddr} "Enter the DNS domain names" 2
-vncputln ${vncaddr} "$dns_domains"
+	vncwait ${vncaddr} "Enter the cluster management interface default gateway" 2
+	vncputln ${vncaddr} "$cluster_managementif_gateway"
 
-vncwait ${vncaddr} "Enter the name server .. addresses" 2
-vncputln ${vncaddr} "$dns_addrs"
+	vncwait ${vncaddr} "Enter the DNS domain names" 2
+	vncputln ${vncaddr} "$dns_domains"
 
-vncwait ${vncaddr} "where is the controller located" 2
-vncputln ${vncaddr} "$controller_located"
+	vncwait ${vncaddr} "Enter the name server .. addresses" 2
+	vncputln ${vncaddr} "$dns_addrs"
 
-vncwait ${vncaddr} "backup destination address" 2
-vncputln ${vncaddr}
-sleep 2
+	vncwait ${vncaddr} "Where is the controller located" 2
+	vncputln ${vncaddr} "$controller_located"
+
+	vncwait ${vncaddr} "backup destination address" 2
+	vncputln ${vncaddr}
+	sleep 2
+else
+	echo
+	expect -c 'spawn virsh console '"$vmnode"'
+		set timeout 120
+		expect {
+			-exact {Hit [Enter] to boot immediately} { send "\r"; }
+			{cryptomod_fips:} { send_user " #missing Hit ...#\n"; }
+		}
+		set timeout 300
+		expect -exact {Type yes to confirm and continue {yes}:} { send "yes\r"; }
+		expect -re "Enter the node management interface port" { send "'${node_managementif_port}'\r"; }
+		expect -re "Enter the node management interface .. address" { send "'$node_managementif_addr'\r"; }
+		expect -re "Enter the node management interface netmask" { send "'$node_managementif_mask'\r"; }
+		expect -re "Enter the node management interface default gateway" { send "'$node_managementif_gateway'\r"; }
+		expect -re "complete cluster setup using the command line" { send "\r"; }
+		expect     "create a new cluster or join an existing cluster?" { send "create\r"; }
+		expect     "used as a single node cluster?" { send "yes\r"; }
+		expect -re "administrator.* password:" { send "'$password'\r"; }
+		expect     "Retype the password:" { send "'$password'\r"; }
+		expect     "Enter the cluster name:" { send "'$cluster_name'\r"; }
+		expect     "Enter an additional license key" { send "\r"; }
+		expect     "Enter the cluster management interface port" { send "'${cluster_managementif_port}'\r"; }
+		expect -re "Enter the cluster management interface .. address" { send "'$cluster_managementif_addr'\r"; }
+		expect     "Enter the cluster management interface netmask" { send "'$cluster_managementif_mask'\r"; }
+		expect     "Enter the cluster management interface default gateway" { send "'$cluster_managementif_gateway'\r"; }
+		expect     "Enter the DNS domain names" { send "'$dns_domains'\r"; }
+		expect -re "Enter the name server .. addresses" { send "'$dns_addrs'\r"; }
+		expect     "Where is the controller located" { send "'$controller_located'\r"; }
+		expect     "backup destination address" { send "\r"; }
+		sleep 2
+		expect     "*\r" { send_user "#exit#\r"; }
+		exit
+	'
+fi
 
 :; echo -e "\n\033[1;36m------------------------------------------------------\033[0m"
 colorvncget $vncaddr
@@ -516,7 +573,7 @@ colorvncget $vncaddr
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> Delete snapshots and add disk shelf ...\033[0m"
 
-vncwait ${vncaddr} "^login:" 1
+port-available.sh $cluster_managementif_addr 22 --wait
 
 nodename=${cluster_name}-01
 diagpasswd=d1234567
@@ -556,22 +613,38 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect eof
 "
 
-echo; expect -c "spawn virsh console $vmnode
-	set timeout 120
-	expect {
-		-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
-		{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
-	}"
-vncwait ${vncaddr} "^login:" 1
-vncputln ${vncaddr} "admin"
-vncputln ${vncaddr} "${password}"
-vncwait ${vncaddr} "${cluster_name}::>" 1
-while true; do
-	vncputln ${vncaddr} "cluster show"
-	vncget ${vncaddr} | grep "$nodename  *true" && break
-	sleep 5
-done
-vncputln ${vncaddr} "exit"
+if vercmp "$ontapver" lt 9.13; then
+	echo; expect -c "spawn virsh console $vmnode
+		set timeout 120
+		expect {
+			-exact {Hit [Enter] to boot immediately} { send \"\\r\"; send_user \" #exit#\\n\"; exit }
+			{cryptomod_fips:} { send_user \" #exit#\\n\"; exit }
+		}"
+	vncwait ${vncaddr} "^login:" 1
+	vncputln ${vncaddr} "admin"
+	vncputln ${vncaddr} "${password}"
+	vncwait ${vncaddr} "${cluster_name}::>" 1
+	while true; do
+		vncputln ${vncaddr} "cluster show"
+		vncget ${vncaddr} | grep "$nodename  *true" && break
+		sleep 5
+	done
+	vncputln ${vncaddr} "exit"
+else
+	expect -c 'spawn virsh console '$vmnode'
+		set timeout 120
+		expect {
+			-exact {Hit [Enter] to boot immediately} { send "\r"; }
+			{cryptomod_fips:} { send_user " #missing Hit ...#\n"; }
+		}
+		set timeout 300
+		expect {login:} { send "admin\r"; }
+		expect {*:} { send "'${password}'\r"; }
+		expect {'${cluster_name}'::>} { send "cluster show\r"; }
+		expect {'$nodename'  *true} { sleep 1; }
+		exit
+	'
+fi
 
 aggr0name=aggr0_${nodename//-/_}
 expect -c "spawn ssh admin@$cluster_managementif_addr
@@ -651,7 +724,7 @@ LIF1_0_NODE=${cluster_name}-01
 LIF1_0_PORT=e0b
 
 LIF1_1_NAME=lif1.1
-[[ -z "$LIF1_1_ADDR" ]] && LIF1_1_ADDR=$(freeIpList "${ExcludeIpList[@]}"|sort -R|head -1)
+[[ -z "$LIF1_1_ADDR" ]] && LIF1_1_ADDR=$(freeIpList $extconnif "${ExcludeIpList[@]}"|sort -R|head -1)
 ExcludeIpList+=($LIF1_1_ADDR)
 LIF1_1_MASK=$(getIp4Mask $(getIp4 $extconnif))
 LIF1_1_NODE=${cluster_name}-01
