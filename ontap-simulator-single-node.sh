@@ -772,6 +772,8 @@ SHARENAME2=cifs2
 #ref1: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/create.html
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
 
+port-available.sh $cluster_managementif_addr 22 --wait
+
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} {

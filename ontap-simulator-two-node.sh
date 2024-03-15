@@ -963,6 +963,8 @@ SHARENAME2=cifs2
 #ref2: https://library.netapp.com/ecmdocs/ECMP1366832/html/vserver/export-policy/rule/create.html
 #ref3: https://tcler.github.io/2017/08/24/NetApp-pnfs-mds-ds-config
 
+port-available.sh $cluster_managementif_addr 22 --wait
+
 expect -c "spawn ssh admin@$cluster_managementif_addr
 	set timeout 120
 	expect {Password:} {
