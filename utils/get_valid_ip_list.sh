@@ -23,4 +23,8 @@ which nmap &>/dev/null || yum install -y nmap >/dev/null
 scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
 
 #echo "$scan_result"
-echo "$scan_result" | awk '/host.down/{print $5}'
+if test -z "$1"; then
+	echo "$scan_result" | awk '/host.down/{print $5}'
+else
+	echo "$scan_result"
+fi
