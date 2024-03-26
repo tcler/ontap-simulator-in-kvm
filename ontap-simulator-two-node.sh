@@ -428,6 +428,7 @@ dns_addrs=$(echo "${dns_addrs}"|awk -F, -v OFS=, '{if(NF>3) {print $1,$3,$3} els
 dns_addrs=${dns_addrs%,}
 
 read controller_located _ < <(hostname -A)
+test -z "$controller_located" && read controller_located _ < <(hostname)
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> [$vmnode1] start ...\033[0m"
