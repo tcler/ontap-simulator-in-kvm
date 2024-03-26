@@ -213,7 +213,11 @@ if [[ -n "$AD_IP" ]]; then
 fi
 ############################## Assert ##############################
 
-dns_domain_names() { sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf; }
+dns_domain_names() {
+	local _names=$(sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf);
+	test -z "$_names" && _names=$(dnsdomainname)
+	echo "$_names"
+}
 dns_addrs() {
 	local netif="$1" _dnslist=
 	if grep -q 127.0.0.53 /etc/resolv.conf; then
