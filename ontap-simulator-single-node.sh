@@ -21,6 +21,7 @@
 #     +-----------+                       +-----------+
 #     e.g: vm rhel-8.3% -net=ontap-data
 #
+command -v vm && test -d /etc/kiss-vm-ns || { echo "[WARN] kiss-vm is required by Ontap Simulator Builder" >&2; exit 127; }
 
 CPID=$$
 PROG=$0
@@ -143,10 +144,10 @@ for i in {1..4}; do
     qemu-img convert -f vmdk -O qcow2 $_dir/vsim-NetAppDOT-simulate-disk${i}.vmdk $_dir/vsim-NetAppDOT-simulate-disk${i}.qcow2
 done
 
-# install dependency
-command -v ipcalc && command -v nmap || {
-	sudo yum install -y ipcalc nmap
-}
+# dependency check
+IPCALC=ipcalc
+command -v apt &>/dev/null && { IPCALC=ipcalc-ng; }
+command -v $IPCALC && command -v nmap || { echo "[WARN] command $IPCALC and nmap is required!" >&2; exit 127; }
 
 getIp4() {
 	local ret

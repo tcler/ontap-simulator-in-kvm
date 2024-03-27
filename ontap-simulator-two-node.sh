@@ -32,6 +32,7 @@
 #                  | vnet: ontap2-ci      |
 #                  +----------------------+
 #
+command -v vm && test -d /etc/kiss-vm-ns || { echo "[WARN] kiss-vm is required by Ontap Simulator Builder" >&2; exit 127; }
 
 CPID=$$
 PROG=$0
@@ -159,10 +160,10 @@ for i in {1..4}; do
     qemu-img convert -f vmdk -O qcow2 $_dir/vsim-NetAppDOT-simulate-disk${i}.vmdk $_dir/vsim-NetAppDOT-simulate-disk${i}.qcow2
 done
 
-# install dependency
-command -v ipcalc && command -v nmap || {
-	sudo yum install -y ipcalc nmap
-}
+# dependency check
+IPCALC=ipcalc
+command -v apt &>/dev/null && { IPCALC=ipcalc-ng; }
+command -v $IPCALC && command -v nmap || { echo "[WARN] command $IPCALC and nmap is required!" >&2; exit 127; }
 
 getIp4() {
 	local ret
@@ -188,12 +189,12 @@ getDefaultNic() {
 	[[ -n "$nic" ]] && echo "$nic"
 }
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
-getIp4Mask() { local ip4="$1"; ipcalc -m $ip4 | sed 's/.*=//'; }
+getIp4Mask() { local ip4="$1"; $IPCALC -m $ip4 | sed 's/.*=//'; }
 freeIpList() {
 	local nic="$1"
 	local excludeIpList="$*"
 	IFS=/ read ip netmasklen < <(getIp4 $nic)
-	IFS== read key netaddr < <(ipcalc -n $ip/$netmasklen)
+	IFS== read key netaddr < <($IPCALC -n $ip/$netmasklen)
 	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
 
 	if [[ -n "$excludeIpList" ]]; then
@@ -415,7 +416,7 @@ TIME_SERVER=${TIME_SERVER:-time.windows.com}
 vmnode1=ontap-node1
 node1_managementif_port=e0c
 node1_managementif_addr=$node1_managementif_addr
-node1_managementif_mask=$(ipcalc -m $(getIp4 $extconnif)|sed 's/.*=//')
+node1_managementif_mask=$($IPCALC -m $(getIp4 $extconnif)|sed 's/.*=//')
 node1_managementif_gateway=$gateWay
 cluster_managementif_port=e0d
 cluster_managementif_addr=192.168.20.11
@@ -610,7 +611,7 @@ colorvncget $vncaddr
 vmnode2=ontap-node2
 node2_managementif_port=e0c
 node2_managementif_addr=$node2_managementif_addr
-node2_managementif_mask=$(ipcalc -m $(getIp4 $extconnif)|sed 's/.*=//')
+node2_managementif_mask=$($IPCALC -m $(getIp4 $extconnif)|sed 's/.*=//')
 node2_managementif_gateway=$gateWay
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
