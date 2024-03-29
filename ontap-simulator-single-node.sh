@@ -544,7 +544,7 @@ else
 			-exact {Hit [Enter] to boot immediately} { send "\r"; }
 			{cryptomod_fips:} { send_user " #missing Hit ...#\n"; }
 		}
-		set timeout 300
+		set timeout 1200
 		expect -exact {Type yes to confirm and continue {yes}:} { send "yes\r"; }
 		expect -re "Enter the node management interface port" { send "'${node_managementif_port}'\r"; }
 		expect -re "Enter the node management interface .. address" { send "'$node_managementif_addr'\r"; }
