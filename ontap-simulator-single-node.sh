@@ -173,12 +173,13 @@ getDefaultNic() {
 	[[ -n "$nic" ]] && echo "$nic"
 }
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
-getIp4Mask() { local ip4="$1"; ipcalc -m $ip4 | sed 's/.*=//'; }
+getIp4Mask() { local ip4="$1"; $IPCALC $ip4 | awk '/Netmask:/{print $2}' ; }
+getIp4Netaddr() { local ip4="$1"; $IPCALC $ip4 | awk -F'[[:space:]/]+' '/Network:/{print $2}'; }
 freeIpList() {
 	local nic="$1"
 	local excludeIpList="$*"
 	IFS=/ read ip netmasklen < <(getIp4 $nic)
-	IFS== read key netaddr < <(ipcalc -n $ip/$netmasklen)
+	netaddr=$(getIp4Netaddr $ip/$netmasklen)
 	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
 
 	if [[ -n "$excludeIpList" ]]; then
@@ -387,7 +388,7 @@ TIME_SERVER=${TIME_SERVER:-time.windows.com}
 vmnode=ontap-single
 node_managementif_port=e0c
 node_managementif_addr=$node_managementif_addr #10.66.12.108
-node_managementif_mask=$(ipcalc -m $(getIp4 $extconnif)|sed 's/.*=//')
+node_managementif_mask=$(getIp4Mask $(getIp4 $extconnif))
 node_managementif_gateway=$gateWay
 cluster_managementif_port=e0a
 cluster_managementif_addr=192.168.10.11

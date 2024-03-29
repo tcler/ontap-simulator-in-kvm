@@ -189,12 +189,13 @@ getDefaultNic() {
 	[[ -n "$nic" ]] && echo "$nic"
 }
 getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
-getIp4Mask() { local ip4="$1"; $IPCALC -m $ip4 | sed 's/.*=//'; }
+getIp4Mask() { local ip4="$1"; $IPCALC $ip4 | awk '/Netmask:/{print $2}' ; }
+getIp4Netaddr() { local ip4="$1"; $IPCALC $ip4 | awk -F'[[:space:]/]+' '/Network:/{print $2}'; }
 freeIpList() {
 	local nic="$1"
 	local excludeIpList="$*"
 	IFS=/ read ip netmasklen < <(getIp4 $nic)
-	IFS== read key netaddr < <($IPCALC -n $ip/$netmasklen)
+	netaddr=$(getIp4Netaddr $ip/$netmasklen)
 	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
 
 	if [[ -n "$excludeIpList" ]]; then
@@ -416,7 +417,7 @@ TIME_SERVER=${TIME_SERVER:-time.windows.com}
 vmnode1=ontap-node1
 node1_managementif_port=e0c
 node1_managementif_addr=$node1_managementif_addr
-node1_managementif_mask=$($IPCALC -m $(getIp4 $extconnif)|sed 's/.*=//')
+node1_managementif_mask=$(getIp4Mask $(getIp4 $extconnif))
 node1_managementif_gateway=$gateWay
 cluster_managementif_port=e0d
 cluster_managementif_addr=192.168.20.11
@@ -611,7 +612,7 @@ colorvncget $vncaddr
 vmnode2=ontap-node2
 node2_managementif_port=e0c
 node2_managementif_addr=$node2_managementif_addr
-node2_managementif_mask=$($IPCALC -m $(getIp4 $extconnif)|sed 's/.*=//')
+node2_managementif_mask=$(getIp4Mask $(getIp4 $extconnif))
 node2_managementif_gateway=$gateWay
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
