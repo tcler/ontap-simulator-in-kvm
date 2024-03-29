@@ -9,7 +9,7 @@ but this requires a lot of manual operations and cannot be automated.
 In order to run this script correctly, you need a **x86_64** PC or laptop with **>16G** RAM, and the OS shoud be CentOS-7/RHEL-7/Fedora-30 or **higher**. (verified on Fedora-{32..39}, RHEL-9.{1..4}, RHEL-8.{2..10}, RHEL-7.{8,9}, Debian-12.5, openSUSE-15.5)  
 
 **\#Note**: We can not bring up ONTAP-9.9 and higher Version on RHEL-7, So it is recommended to use the latest version of **Fedora, RHEL-9/Rocky-9, RHEL-8/Rocky-8**  
-**\#[Update: 2024-03-28]** with latest [kiss-vm](https://github.com/tcler/kiss-vm-ns), we can also bring up ONTAP-13.1 on latest **Debian-12.5** and **openSUSE-15.5**  
+**\#[Update: 2024-03-29]** with latest [kiss-vm](https://github.com/tcler/kiss-vm-ns), we can also bring up ONTAP-13.1 on latest **Debian-12.5**, **openSUSE-15.5**  and **latest archlinux**
 
 # software requires
 You also need to install [kiss-vm-ns](https://github.com/tcler/kiss-vm-ns) in advance:
