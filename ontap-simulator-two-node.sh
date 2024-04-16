@@ -161,41 +161,14 @@ for i in {1..4}; do
 done
 
 # dependency check
-IPCALC=ipcalc
-command -v apt &>/dev/null && { IPCALC=ipcalc-ng; }
+IPCALC=ipcalc; command -v ipcalc-ng &>/dev/null && { IPCALC=ipcalc-ng; }
 command -v $IPCALC && command -v nmap || { echo "[WARN] command $IPCALC and nmap is required!" >&2; exit 127; }
 
-getIp4() {
-	local ret
-	local nic=$1
-	local ipaddr=`ip addr show $nic`;
-	ret=$(echo "$ipaddr" |
-		awk '/inet .* (global|host lo)/{match($0,"inet ([0-9.]+/[0-9]+)",M); print M[1]}')
-
-	if [[ -n "$ret" ]]; then
-		echo "$ret"
-		return 0
-	else
-		return 1
-	fi
-}
-getDefaultNic() {
-	local nics=$(ip route | awk '/default/{match($0,"dev ([^ ]+)",M); print M[1]}')
-	for nic in $nics; do
-		[[ -z "$(ip -d link show  dev $nic|sed -n 3p)" ]] && {
-			break
-		}
-	done
-	[[ -n "$nic" ]] && echo "$nic"
-}
-getDefaultGateway() { ip route show | awk '$1=="default"{print $3; exit}'; }
-getIp4Mask() { local ip4="$1"; $IPCALC $ip4 | awk '/Netmask:/{print $2}' ; }
-getIp4Netaddr() { local ip4="$1"; $IPCALC $ip4 | awk -F'[[:space:]/]+' '/Network:/{print $2}'; }
 freeIpList() {
 	local nic="$1"
 	local excludeIpList="$*"
-	IFS=/ read ip netmasklen < <(getIp4 $nic)
-	netaddr=$(getIp4Netaddr $ip/$netmasklen)
+	IFS=/ read ip netmasklen < <(get-ip.sh -m $nic)
+	netaddr=$(get-net-addr.sh $ip/$netmasklen)
 	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
 
 	if [[ -n "$excludeIpList" ]]; then
@@ -206,13 +179,13 @@ freeIpList() {
 	fi
 }
 ExcludeIpList=($AD_IP)
-extconnif=$(getDefaultNic)
+extconnif=$(get-default-nic.sh)
 extNetOpt="--net-macvtap=-"
-gateWay=$(getDefaultGateway)
+gateWay=$(get-default-gateway.sh)
 [[ -d /sys/class/net/$extconnif/wireless ]] && {
 	extconnif=virbr-kissalt
 	extNetOpt="--net=kissaltnet"
-	gateWay=$(getIp4 $extconnif|awk -F/ '{print $1}')
+	gateWay=$(get-ip.sh $extconnif)
 }
 
 ############################## Assert ##############################
@@ -417,7 +390,7 @@ TIME_SERVER=${TIME_SERVER:-time.windows.com}
 vmnode1=ontap-node1
 node1_managementif_port=e0c
 node1_managementif_addr=$node1_managementif_addr
-node1_managementif_mask=$(getIp4Mask $(getIp4 $extconnif))
+node1_managementif_mask=$(get-net-mask.sh $(get-ip.sh -m $extconnif))
 node1_managementif_gateway=$gateWay
 cluster_managementif_port=e0d
 cluster_managementif_addr=192.168.20.11
@@ -612,7 +585,7 @@ colorvncget $vncaddr
 vmnode2=ontap-node2
 node2_managementif_port=e0c
 node2_managementif_addr=$node2_managementif_addr
-node2_managementif_mask=$(getIp4Mask $(getIp4 $extconnif))
+node2_managementif_mask=$(get-net-mask.sh $(get-ip.sh -m $extconnif))
 node2_managementif_gateway=$gateWay
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
@@ -903,7 +876,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 VS=vs1
 VS_AGGR=aggr1_1
 PolicyName=fs_export
-testIp=$(getIp4 $extconnif|sed 's;/.*$;;')
+testIp=$(get-ip.sh $extconnif)
 
 VOL1=vol1
 VOL1_AGGR=aggr1_1
@@ -917,7 +890,7 @@ LIF1_0_PORT=e0e
 LIF1_1_NAME=lif1.1
 [[ -z "$LIF1_1_ADDR" ]] && LIF1_1_ADDR=$(freeIpList $extconnif "${ExcludeIpList[@]}"|sort -R|head -1)
 ExcludeIpList+=($LIF1_1_ADDR)
-LIF1_1_MASK=$(getIp4Mask $(getIp4 $extconnif))
+LIF1_1_MASK=$(get-net-mask.sh $(get-ip.sh -m $extconnif))
 LIF1_1_NODE=${cluster_name}-01
 LIF1_1_PORT=e0f
 
@@ -933,12 +906,12 @@ LIF2_0_PORT=e0e
 LIF2_1_NAME=lif2.1
 [[ -z "$LIF2_1_ADDR" ]] && LIF2_1_ADDR=$(freeIpList $extconnif "${ExcludeIpList[@]}"|sort -R|head -1)
 ExcludeIpList+=($LIF2_1_ADDR)
-LIF2_1_MASK=$(getIp4Mask $(getIp4 $extconnif))
+LIF2_1_MASK=$(get-net-mask.sh $(get-ip.sh -m $extconnif))
 LIF2_1_NODE=${cluster_name}-02
 LIF2_1_PORT=e0f
 
 [[ -z "$NAS_SERVER_NAME" ]] && {
-	read A B C D N < <(getIp4 $(getDefaultNic)|sed 's;[./]; ;g')
+	read A B C D N < <(get-default-ip.sh -m|sed 's;[./]; ;g')
 	NAS_SERVER_NAME=ontap2-$(printf %02x%02x $C $D)
 }
 NAS_SERVER_FQDN=$NAS_SERVER_NAME
