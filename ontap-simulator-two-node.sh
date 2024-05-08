@@ -151,7 +151,8 @@ fi
 
 #get ontap version
 _fname=${ImageFile##*/}
-ontapver=${_fname/vsim-netapp-DOT/}
+ontapver=${_fname#vsim-netapp-DOT}
+ontapver=${ontapver%-cm_nodar.ova}
 
 #convert image file to qcow2 files
 _dir=$(dirname $ImageFile); [[ ! -w "$_dir" ]] && _dir=/tmp
@@ -468,7 +469,7 @@ vncputln ${vncaddr} "yes"
 COMM
 
 echo "{debug} ontapver: $ontapver"
-if vercmp "$ontapver" lt 9.13; then
+if [[ "$ontapver" != 9.13.1 ]]; then
 	echo; expect -c "spawn virsh console $vmnode1
 		set timeout 120
 		expect {
@@ -646,7 +647,7 @@ vncwait ${vncaddr} "This will erase all the data on the disks, are you sure?" 5
 vncputln ${vncaddr} "yes"
 COMM
 
-if vercmp "$ontapver" lt 9.13; then
+if [[ "$ontapver" != 9.13.1 ]]; then
 	echo; expect -c "spawn virsh console $vmnode2
 		set timeout 120
 		expect {
@@ -757,7 +758,7 @@ for vmnode in $vmnode1 $vmnode2; do
 		expect eof
 	"
 
-	if vercmp "$ontapver" lt 9.13; then
+	if [[ "$ontapver" != 9.13.1 ]]; then
 		echo; expect -c "spawn virsh console $vmnode
 			set timeout 120
 			expect {

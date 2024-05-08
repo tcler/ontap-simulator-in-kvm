@@ -135,7 +135,8 @@ fi
 
 #get ontap version
 _fname=${ImageFile##*/}
-ontapver=${_fname/vsim-netapp-DOT/}
+ontapver=${_fname#vsim-netapp-DOT}
+ontapver=${ontapver%-cm_nodar.ova}
 
 #convert image file to qcow2 files
 _dir=$(dirname $ImageFile); [[ ! -w "$_dir" ]] && _dir=/tmp
@@ -441,7 +442,7 @@ vncputln ${vncaddr} "yes"
 COMM
 
 echo "{debug} ontapver: $ontapver"
-if vercmp "$ontapver" lt 9.13; then
+if [[ "$ontapver" != 9.13.1 ]]; then
 	echo; expect -c "spawn virsh console $vmnode
 		set timeout 120
 		expect {
@@ -593,7 +594,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect eof
 "
 
-if vercmp "$ontapver" lt 9.13; then
+if [[ "$ontapver" != 9.13.1 ]]; then
 	echo; expect -c "spawn virsh console $vmnode
 		set timeout 120
 		expect {
