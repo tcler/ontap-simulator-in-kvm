@@ -683,6 +683,11 @@ if [[ "$ontapver" != 9.13.1 ]]; then
 	read node1_private_ip <<<"$node1_private_ips"
 	vncputln ${vncaddr} "$node1_private_ip"
 
+	#vncwait ${vncaddr} "Enter the username of a user with the .admin. role" 2
+	vncputln ${vncaddr} "admin"
+	#vncwait ${vncaddr} "Enter the user's password:" 2
+	vncputln ${vncaddr} "$password"
+
 	vncwait ${vncaddr} "This node has been joined to cluster" 2
 else
 	read node1_private_ip <<<"$node1_private_ips"
