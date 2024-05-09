@@ -33,6 +33,11 @@ CMode_licenses_9.9.1.txt
 vsim-netapp-DOT9.9.1-cm_nodar.ova
 ```
 
+## supported ontap simulator versions:
+```
+9.7, 9.8, 9.9.1, 9.10.1, 9.11.1, 9.12.1, 9.13.1, 9.13.1P7, 9.14.1
+```
+
 ## run the automation script
 ```
 imageFile=vsim-netapp-DOT9.9.1-cm_nodar.ova
