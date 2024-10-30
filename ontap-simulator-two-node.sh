@@ -311,7 +311,7 @@ ocrgrep() {
 	local pattern=${1}
 	local ignored_charset="${2:-ijkfwevy[|:{}}"
 	pattern=$(sed "s,[${ignored_charset}],.,g" <<<"${pattern,,}")
-	grep -i "${pattern}"
+	grep -Ei "${pattern}"
 }
 vncwait() {
 	local addr=$1
@@ -535,6 +535,18 @@ if [[ "$ontapver" != 9.13.1 ]]; then
 
 	vncwait ${vncaddr} "Enter the name server .. addresses" 2
 	vncputln ${vncaddr} "$dns_addrs"
+
+	#workaround for DNS verify issue on 9.15.1
+	while ! vncget ${vncaddr} |
+		ocrgrep "Where is the controller located|Error: Failed to verify the specified DNS configuration" 'ijkfwevy:{}['; do
+		sleep 5;
+	done
+	vncget ${vncaddr} | ocrgrep "Error: Failed to verify the specified DNS configuration" && {
+		vncwait ${vncaddr} "Enter the DNS domain names" 2
+		vncputln ${vncaddr} ""
+		vncwait ${vncaddr} "Enter the name server .. addresses" 2
+		vncputln ${vncaddr} ""
+	}
 
 	vncwait ${vncaddr} "Where is the controller located" 2
 	vncputln ${vncaddr} "$controller_located"
