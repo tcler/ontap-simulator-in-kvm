@@ -1027,6 +1027,9 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 		send \"vserver nfs create -access true -v3 enabled -v4.0 enabled -tcp enabled -v4.0-acl enabled -v4.0-read-delegation enabled -v4.0-write-delegation enabled -v4-id-domain defaultv4iddomain.com -v4-grace-seconds 45 -v4-acl-preserve enabled -v4.1 enabled -rquota enabled -v4.1-acl enabled -vstorage enabled -v4-numeric-ids enabled -v4.1-read-delegation enabled -v4.1-write-delegation enabled -mount-rootonly disabled -nfs-rootonly disabled -permitted-enc-types des,des3,aes-128,aes-256 -showmount enabled -name-service-lookup-protocol udp\\r\"
 	}
 	expect {${cluster_name}::>} {
+		send \"vserver nfs modify -vserver $VS -v4.1-pnfs enabled\\r\"
+	}
+	expect {${cluster_name}::>} {
 		send \"unix-user create -vserver $VS -user nfs -id 500 -primary-gid 0\\r\"
 	}
 	expect {${cluster_name}::>} {
