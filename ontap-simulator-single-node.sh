@@ -53,6 +53,7 @@ Usage() {
 	  --dnsdomains <domain1[,domain2]>   #e.g: test.a.com or test.a.com,devel.a.com
 	  --node-pubaddr <ip>                #node management address for public access
 	  --lif-pubaddr <ip>                 #default lif1.1 address for public access
+	  --no-pubif                         #don't set public interface, only workaround for nfstest_pnfs test
 	  --vserver-name <NetBIOS>           #NetBIOS(or host name) of vserver, used by krb5 configuring
 	  --cifs-workgroup <NetBIOS>         #Workgroup Name, This parameter specifies the name of the workgroup (up to 15 characters).
 	  --ad-hostname <FQDN>               #Fully Qualified Domain Name, This parameter specifies the name of window servers.
@@ -75,6 +76,7 @@ _at=`getopt -o h \
 	--long dnsdomains: \
 	--long node-pubaddr: \
 	--long lif-pubaddr: \
+	--long no-pubif \
 	--long vserver-name: \
 	--long cifs-workgroup: \
 	--long ad-hostname: \
@@ -98,6 +100,7 @@ while true; do
 	--dnsdomains)     DNS_DOMAINS=$2; shift 2;;
 	--node-pubaddr)   node_managementif_addr=$2; shift 2;;
 	--lif-pubaddr)    LIF1_1_ADDR=$2; shift 2;;
+	--no-pubif)       NO_PUBIF=yes; shift 1;;
 	--vserver-name)   NAS_SERVER_NAME=$2; shift 2;;
 	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
 	--ad-hostname)    AD_NAME=$2; shift 2;;
@@ -167,11 +170,6 @@ ExcludeIpList=($AD_IP)
 extconnif=$(get-default-nic.sh)
 gateWay=$(get-default-gateway.sh)
 extNetOpt="--net-macvtap=-"
-[[ -d /sys/class/net/$extconnif/wireless ]] && {
-	extconnif=virbr-kissalt
-	extNetOpt="--net=kissaltnet"
-	gateWay=$(get-ip.sh $extconnif)
-}
 
 ############################## Assert ##############################
 if [[ -n "$AD_IP" ]]; then
@@ -354,6 +352,23 @@ vercmp() {
 	return $res
 }
 
+:; echo -e "\n\033[1;30m================================================================================\033[0m"
+:; echo -e "\033[1;30m=> creating network ...\033[0m"
+netdata=ontap-data
+vm netcreate netname=$netdata brname=br-ontap-data subnet=10
+vm netls | grep -w $netdata >/dev/null || vm netstart $netdata
+
+[[ -d /sys/class/net/$extconnif/wireless ]] && {
+	extconnif=virbr-kissalt
+	extNetOpt="--net=kissaltnet"
+	gateWay=$(get-ip.sh $extconnif)
+}
+[[ -n "$NO_PUBIF" ]] && {
+	extconnif=br-ontap-data
+	extNetOpt=--net=$netdata
+	gateWay=$(get-ip.sh $extconnif)
+}
+
 ##please change/cusotmize bellow default configration at first
 cluster_name=fsqe-snc1
 password=fsqe2020
@@ -380,12 +395,6 @@ dns_addrs=${dns_addrs%,}
 
 read controller_located _ < <(hostname -A)
 test -z "$controller_located" && read controller_located _ < <(hostname)
-
-:; echo -e "\n\033[1;30m================================================================================\033[0m"
-:; echo -e "\033[1;30m=> creating network ...\033[0m"
-netdata=ontap-data
-vm netcreate netname=$netdata brname=br-ontap-data subnet=10
-vm netls | grep -w $netdata >/dev/null || vm netstart $netdata
 
 :; echo -e "\n\033[1;30m================================================================================\033[0m"
 :; echo -e "\033[1;30m=> node vm start ...\033[0m"

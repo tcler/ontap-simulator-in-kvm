@@ -66,6 +66,7 @@ Usage() {
 	  --node2-pubaddr <ip>               #node2 management address for public access
 	  --lif1-pubaddr <ip>                #default lif1.1 address for public access
 	  --lif2-pubaddr <ip>                #default lif2.1 address for public access
+	  --no-pubif                         #don't set public interface, only workaround for nfstest_pnfs test
 	  --vserver-name <NetBIOS>           #NetBIOS(or host name) of vserver, used by krb5 configuring
 	  --cifs-workgroup <NetBIOS>         #Workgroup Name, This parameter specifies the name of the workgroup (up to 15 characters).
 	  --ad-hostname <FQDN>               #Fully Qualified Domain Name, This parameter specifies the name of window servers.
@@ -90,6 +91,7 @@ _at=`getopt -o h \
 	--long node2-pubaddr: \
 	--long lif1-pubaddr: \
 	--long lif2-pubaddr: \
+	--long no-pubif \
 	--long vserver-name: \
 	--long cifs-workgroup: \
 	--long ad-hostname: \
@@ -115,6 +117,7 @@ while true; do
 	--node2-pubaddr)  node2_managementif_addr=$2; shift 2;;
 	--lif1-pubaddr)   LIF1_1_ADDR=$2; shift 2;;
 	--lif2-pubaddr)   LIF2_1_ADDR=$2; shift 2;;
+	--no-pubif)       NO_PUBIF=yes; shift 1;;
 	--vserver-name)   NAS_SERVER_NAME=$2; shift 2;;
 	--cifs-workgroup) CIFS_WORKGROUP=$2; shift 2;;
 	--ad-hostname)    AD_NAME=$2; shift 2;;
@@ -183,11 +186,6 @@ ExcludeIpList=($AD_IP)
 extconnif=$(get-default-nic.sh)
 extNetOpt="--net-macvtap=-"
 gateWay=$(get-default-gateway.sh)
-[[ -d /sys/class/net/$extconnif/wireless ]] && {
-	extconnif=virbr-kissalt
-	extNetOpt="--net=kissaltnet"
-	gateWay=$(get-ip.sh $extconnif)
-}
 
 ############################## Assert ##############################
 if [[ -n "$AD_IP" ]]; then
@@ -379,6 +377,17 @@ vm netls | grep -w $netcluster >/dev/null || vm netstart $netcluster
 netdata=ontap2-data  #e0d #e0e
 vm netcreate netname=$netdata brname=br-ontap2-data subnet=20
 vm netls | grep -w $netdata >/dev/null || vm netstart $netdata
+
+[[ -d /sys/class/net/$extconnif/wireless ]] && {
+	extconnif=virbr-kissalt
+	extNetOpt="--net=kissaltnet"
+	gateWay=$(get-ip.sh $extconnif)
+}
+[[ -n "$NO_PUBIF" ]] && {
+	extconnif=br-ontap2-data
+	extNetOpt=--net=$netdata
+	gateWay=$(get-ip.sh $extconnif)
+}
 
 #===============================================================================
 #cluster
