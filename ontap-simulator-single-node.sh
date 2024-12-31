@@ -291,7 +291,7 @@ vncputln() {
 
 ocrgrep() {
 	local pattern=${1}
-	local ignored_charset="${2:-ijkfwevy[|:{}}"
+	local ignored_charset="${2:-yaijkfwevy[|:{}}"
 	pattern=$(sed "s,[${ignored_charset}],.,g" <<<"${pattern,,}")
 	grep -Ei "${pattern}"
 }
