@@ -33,9 +33,9 @@ trap_vmpanic() {
 }
 trap trap_vmpanic SIGALRM SIGUSR2
 [[ "$VMPANIC" = yes ]] && {
-	qemucpuOpt=--qemucpu=Icelake-Server
+	cpuOpt=--cpu=Icelake-Server
 	PATH=/usr/libexec:$PATH qemu-kvm -cpu ?|grep -q Icelake-Server ||
-		qemucpuOpt=--qemucpu=Skylake-Server
+		cpuOpt=--cpu=Skylake-Server
 }
 
 # command line parse
@@ -403,7 +403,7 @@ vm create -n $vmnode ONTAP-simulator -i $_dir/vsim-NetAppDOT-simulate-disk1.qcow
 	--disk=$_dir/vsim-NetAppDOT-simulate-disk{2..4}.qcow2,bus=ide \
 	--net=$netdata,e1000  --net=$netdata,e1000 ${extNetOpt},e1000 ${extNetOpt},e1000 \
 	--noauto --nocloud --video auto --osv $OSV --msize $((6*1024)) --cpus 2,cores=2 \
-	--vncput-after-install key:enter  --force  $qemucpuOpt
+	--vncput-after-install key:enter  --force  $cpuOpt
 
 read vncaddr <<<"$(vm vnc $vmnode)"
 vncaddr=${vncaddr/:/::}
