@@ -173,7 +173,7 @@ freeIpList() {
 	local excludeIpList="$*"
 	IFS=/ read ip netmasklen < <(get-ip.sh -m $nic)
 	netaddr=$(get-net-addr.sh $ip/$netmasklen)
-	local scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
+	local scan_result=$(nmap -PA22,80,113,443 -sn -nv $netaddr/$netmasklen 2>/dev/null)
 
 	if [[ -n "$excludeIpList" ]]; then
 		echo "$scan_result" | awk '/host.down/{print $5}' | sed '1d;$d' |

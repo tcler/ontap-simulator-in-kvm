@@ -5,7 +5,7 @@ command -v $IPCALC >/dev/null && command -v nmap >/dev/null || { echo "[WARN] co
 
 IFS=/ read ip netmasklen < <(get-default-ip.sh -m)
 netaddr=$(get-net-addr.sh $ip/$netmasklen)
-scan_result=$(nmap -v -n -sn $netaddr/$netmasklen 2>/dev/null)
+scan_result=$(nmap -PA22,80,113,443 -sn -nv $netaddr/$netmasklen 2>/dev/null)
 
 #echo "$scan_result"
 if test -z "$1"; then
