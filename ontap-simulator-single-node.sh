@@ -33,8 +33,8 @@ trap_vmpanic() {
 }
 trap trap_vmpanic SIGALRM SIGUSR2
 [[ "$VMPANIC" = yes ]] && {
-	cpuOpt=--cpu=Icelake-Server,-hle,-rtm
-	PATH=/usr/libexec:$PATH qemu-kvm -cpu ?|grep -q Icelake-Server ||
+	#cpuOpt=--cpu=Icelake-Server,-hle,-rtm
+	#PATH=/usr/libexec:$PATH qemu-kvm -cpu ?|grep -q Icelake-Server ||
 		cpuOpt=--cpu=Skylake-Server
 }
 
