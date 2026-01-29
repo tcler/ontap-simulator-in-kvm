@@ -894,7 +894,7 @@ expect -c "spawn ssh admin@$cluster_managementif_addr
 	expect {${cluster_name}::>} { send \"system license add -license-code $LicenseList\\r\" }
 	expect {${cluster_name}::>} { send \"aggr show\\r\" }
 	expect {${cluster_name}::>} { send \"vol show\\r\" }
-	expect {${cluster_name}::>} { send \"network port show\\r\" }
+	expect {${cluster_name}::>} { send \"network port show\\r   \" }
 	expect {${cluster_name}::>} { send \"network interface show\\r\" }
 	expect {${cluster_name}::>} { send \"exit\\r\" }
 	expect eof

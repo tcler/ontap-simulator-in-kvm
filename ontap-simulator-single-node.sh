@@ -677,7 +677,7 @@ if [[ -n "$RAW" ]]; then
 		expect {Password:} { send \"${password}\\r\" }
 		expect {${cluster_name}::>} { send \"aggr show\\r\" }
 		expect {${cluster_name}::>} { send \"vol show\\r\" }
-		expect {${cluster_name}::>} { send \"network port show\\r\" }
+		expect {${cluster_name}::>} { send \"network port show\\r   \" }
 		expect {${cluster_name}::>} { send \"network interface show\\r\" }
 		expect {${cluster_name}::>} { send \"exit\\r\" }
 		expect eof
