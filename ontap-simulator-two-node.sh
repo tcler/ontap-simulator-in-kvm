@@ -212,8 +212,11 @@ dns_domain_names() {
 dns_addrs() {
 	local netif="$1" _dnslist=
 	if grep -q 127.0.0.53 /etc/resolv.conf; then
-		_dnslist=$(systemd-resolve --status -4 ${netif} |
-			awk -v RS= 'match($0, /Current DNS Server: ([^\n]+)/, M) {print M[1]}'|paste -sd ,;)
+		while :; do
+			_dnslist=$(systemd-resolve --status -4 ${netif} |
+				awk -v RS= 'match($0, /Current DNS Server: ([^\n]+)/, M) {print M[1]}'|paste -sd ,;)
+			[[ "${_dnslist}" = *::* ]] || break
+		done
 	else
 		_dnslist=$(sed -rn '/^nameserver */{s///; s/ *#.*$//; p}' /etc/resolv.conf | paste -sd ,;)
 	fi
