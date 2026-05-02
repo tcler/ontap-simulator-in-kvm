@@ -206,6 +206,7 @@ fi
 dns_domain_names() {
 	local _names=$(sed -rn -e '/^search */{s///; s/( |^)local( |$)//; s/ /,/g; p}' /etc/resolv.conf);
 	test -z "$_names" && _names=$(dnsdomainname)
+	test "$_names" = . && _names=localdomain
 	echo "$_names"
 }
 dns_addrs() {
